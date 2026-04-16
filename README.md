@@ -1,6 +1,8 @@
 # ciap-mvp-b
 The CIAP-MVP Git repository for Team B.
-- Edit as neccesary , 
+- Edit as neccesary ,commit to main only when absolutely neccesary
+- containerize your apps, keep clear and concise commit e.g `git commit -m feat: your-commit`
+- Ensure you use separate ports to prevent race conditions e.g backend uses `localhost:3000` frontend should use `localhost:4000`
 
 ## What is this repo
 
