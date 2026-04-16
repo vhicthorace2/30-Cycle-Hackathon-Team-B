@@ -56,10 +56,10 @@ The current frontend implementation focuses on:
 
 ## Quick Start
 ```bash
-npm install
-npm run dev
+yarn install
+yarn dev
 ```
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+Open [http://localhost:4000](http://localhost:4000) to view the application.
 
 ## Project Structure
 ```text
