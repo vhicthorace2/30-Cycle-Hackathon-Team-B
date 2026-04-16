@@ -7,7 +7,7 @@ The CIAP-MVP Git repository for Team B.
 ## What is this repo
 
 - `backend/` contains the NestJS API (auth, users, sessions, etc.)
-- `frontend/` contains the client app
+- `frontend/` contains the Next.js client app
 - `ML/` contains ML-related work
 
 ## Backend usage (for frontend & ML)
@@ -56,6 +56,15 @@ pnpm run db:seed
 
 - Uses `pnpm` only.
 - Access tokens use `ES256`; refresh tokens use `ES512`.
+
+## Frontend usage
+
+```bash
+cd frontend
+yarn install
+yarn dev
+```
+Runs on `localhost:4000` by default.
 
 ## More docs
 
