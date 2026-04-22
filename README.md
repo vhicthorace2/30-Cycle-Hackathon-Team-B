@@ -65,7 +65,7 @@ At minimum, set these values in `.env` (see `.env.example` for the template):
 
 If you are running Redis (local or Docker), configure:
 
-- `REDIS_URL` (example: `redis://:password@localhost:6379/0`)
+- `REDIS_URL` (example: `redis://:password@localhost:6379/0` or `rediss://default:password@host:6380/0`)
 - `REDIS_PASSWORD` (required if your Redis instance enforces auth)
 
 ### 2) Setup Database
@@ -124,17 +124,17 @@ This boilerplate currently focuses on:
 
 ## Built With
 
-| Technology | Version (from repo) | Purpose |
-| --- | --- | --- |
-| NestJS | 11.x | Core API framework |
-| Node.js | >= 24.11.x | Runtime |
-| TypeScript | 5.x | Type-safe development |
-| Drizzle ORM | 0.45.x | Schema + query layer |
-| PostgreSQL (`pg`) | 8.20.x | Database driver |
-| Passport/JWT | 11.x / 4.x | Authentication |
-| google-auth-library | 10.x | Google sign-in token verification |
-| Helmet | 8.x | HTTP security headers |
-| Jest | 30.x | Testing |
+| Technology          | Version (from repo) | Purpose                           |
+| ------------------- | ------------------- | --------------------------------- |
+| NestJS              | 11.x                | Core API framework                |
+| Node.js             | >= 24.11.x          | Runtime                           |
+| TypeScript          | 5.x                 | Type-safe development             |
+| Drizzle ORM         | 0.45.x              | Schema + query layer              |
+| PostgreSQL (`pg`)   | 8.20.x              | Database driver                   |
+| Passport/JWT        | 11.x / 4.x          | Authentication                    |
+| google-auth-library | 10.x                | Google sign-in token verification |
+| Helmet              | 8.x                 | HTTP security headers             |
+| Jest                | 30.x                | Testing                           |
 
 ## Features
 
@@ -171,7 +171,7 @@ This boilerplate currently focuses on:
 
 ### Developer Experience
 
-- SWC dev/watch compilation for 20x faster builds than the typescript compiler 
+- SWC dev/watch compilation for 20x faster builds than the typescript compiler
 - Swagger/OpenAPI at `/api-docs`
 - Drizzle migration and studio tooling
 - Typecheck and lint scripts
@@ -206,7 +206,7 @@ At minimum configure:
 - `GOOGLE_LOGIN_REDIRECT_URI` (default: `http://localhost:3000/auth/socials/google/login/callback`)
 - `GOOGLE_YOUTUBE_REDIRECT_URI` (default: `http://localhost:3000/ingestion/youtube/oauth2/callback`)
 - `ADMIN_SIGNUP_KEY`
-- `REDIS_URL` (if running Redis/BullMQ)
+- `REDIS_URL` (if running Redis/BullMQ; supports `redis://` and `rediss://`)
 - `REDIS_PASSWORD` (if Redis requires auth)
 
 See [.env.example](./.env.example) for full template.
