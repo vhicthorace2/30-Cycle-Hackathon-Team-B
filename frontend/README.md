@@ -1,80 +1,80 @@
-# CIAP Frontend - Team B
+# CIAP Frontend (Creator Intelligence & Analytics Platform)
 
-A high-performance, production-oriented React interface for the **Creative Influence and Analytics Platform (CIAP)**. Built with Next.js 16, Tailwind CSS 4, and designed for strict scalability, analytics visualization, and PWA reliability.
+Welcome to the frontend of the **CIAP Platform**, a high-fidelity analytics and discovery engine built for the African creator economy. This application provides creators with deep insights into their performance and allows brands (SMEs) to discover and compare influencers using data-driven metrics.
 
-## Table Of Contents
-- [Important Notes](#important-notes)
-- [Must Read: Setup And Usage](#must-read-setup-and-usage)
-- [Current Scope](#current-scope)
-- [Prerequisites](#prerequisites)
-- [Built With](#built-with)
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Environment Setup](#environment-setup)
-- [Project Structure](#project-structure)
-- [Scripts](#scripts)
-- [Contributing](#contributing)
+## 🚀 Key Features
 
-## Important Notes
-- Uses **Tailwind CSS 4** for high-performance atomic styling.
-- Configured as a **PWA** (Progressive Web App) for offline capability and mobile-first experience.
-- Implements strict **TypeScript 5** boundaries across all modules.
-- Analytics are rendered via **Recharts** with optimized re-render cycles.
+*   **Unified Creator Studio**: A central hub for creators to see their total reach, influence score, and loyalty metrics across platforms.
+*   **Deep YouTube Integration**: Real-time ingestion of channel stats, video engagement, and daily analytics (views, watch time, etc.).
+*   **Role-Based Dashboards**: 
+    *   **Creators**: Focus on personal growth and account management.
+    *   **SME/Agencies**: Focus on market discovery, creator search, and campaign forecasting.
+*   **Modern Studio Aesthetic**: A premium "Retro-Modern" design featuring bold borders, tactile shadows, and vibrant pastel palettes.
+*   **Influence Scoring**: AI-driven scores calculated based on engagement, growth, and audience resonance.
 
-## Must Read: Setup And Usage
-1) **Configure Environment**: Set `NEXT_PUBLIC_API_URL` to point to the CIAP Backend.
-2) **Package Management**: Use `npm` or `pnpm` consistently.
-3) **Commit Messages**: Follow conventional commits (e.g., `feat(ui): add dashboard charts`).
+## 🛠 Tech Stack
 
-## Current Scope
-The current frontend implementation focuses on:
-- **Dashboard API Integration**: Consuming CIAP backend endpoints for analytics.
-- **Interactive Visualization**: Real-time data plotting for creator performance.
-- **Auth Flow UI**: Implementation of Google OAuth and JWT-based session management.
-- **PWA Lifecycle**: Offline caching and manifest configuration.
+*   **Core**: [Next.js 16 (App Router)](https://nextjs.org/)
+*   **Language**: [TypeScript](https://www.typescriptlang.org/)
+*   **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+*   **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+*   **Data Fetching**: [TanStack Query v5](https://tanstack.com/query/latest)
+*   **Icons**: [@phosphor-icons/react](https://phosphoricons.com/)
+*   **Animations**: [Framer Motion](https://www.framer.com/motion/)
+*   **Charts**: [Recharts](https://recharts.org/)
 
-## Prerequisites
-- Node.js >= 20.x
-- npm / pnpm / yarn
-- Active [CIAP Backend](https://github.com/30Cycleltd/ciap-mvp-b) instance for data fetching.
+## 📂 Directory Structure
 
-## Built With
-| Technology | Version | Purpose |
-| :--- | :--- | :--- |
-| **Next.js** | 16.x | App Router & Core Framework |
-| **Tailwind CSS** | 4.x | Styling & Design System |
-| **React** | 19.x | Component Library |
-| **Framer Motion** | 12.x | High-performance Micro-animations |
-| **Recharts** | 3.x | Analytics & Data Visualization |
-| **Lucide React** | 1.x | Icon System |
-
-## Features
-- **Modern Dashboard**: Responsive layouts with tenant-aware display logic.
-- **Dynamic Charts**: Interactive analytics panels for discovery and performance tracking.
-- **Smooth Interaction**: Transitions powered by Framer Motion for a premium feel.
-- **PWA Ready**: Mobile-centric manifest and service worker configuration.
-
-## Quick Start
-```bash
-yarn install
-yarn dev
-```
-Open [http://localhost:4000](http://localhost:4000) to view the application.
-
-## Project Structure
 ```text
-src/
-  app/         # Next.js App Router (Layouts, Pages)
-  components/  # Shared UI & Feature-specific components
-  lib/         # Utility functions and shared logic
-  types/       # Global TypeScript interfaces
-public/        # PWA assets and static icons
+frontend/
+├── app/                  # Next.js App Router (File-based routing)
+│   ├── (auth)/           # Authentication flows (Login, Signup)
+│   ├── (protected)/      # Gated features (Dashboard, Discovery)
+│   └── layout.tsx        # Global providers and layout shell
+├── components/           # UI Component Library
+│   ├── layout/           # Shared layout parts (Sidebar, Topbar, Nav)
+│   └── shared/           # Atomic UI elements (Buttons, Cards, Inputs)
+├── lib/                  # Core Logic & Utilities
+│   ├── api/              # Axios client and React Query hooks
+│   ├── auth/             # Session and role management (Zustand)
+│   └── utils.ts          # Styling and helper functions
+├── public/               # Static Assets (Logos, Undraw illustrations)
+├── types/                # Global TypeScript interfaces
+└── hooks/                # Custom React hooks
 ```
 
-## Scripts
-- `npm run dev`: Start development server with Webpack.
-- `npm run build`: Production bundle generation.
-- `npm run lint`: ESLint static analysis.
+## ⚙️ Setup & Development
 
-## Contributing
-Please ensure all UI changes adhere to the CIAP Design System and use Tailwind 4 primitives. Tested and type-safe components are mandatory.
+1.  **Clone & Install**:
+    ```bash
+    pnpm install
+    ```
+2.  **Environment Variables**:
+    Create a `.env.local` file:
+    ```env
+    NEXT_PUBLIC_API_URL=http://localhost:3000
+    ```
+3.  **Run Development Server**:
+    ```bash
+    pnpm dev
+    ```
+    The app will be available at `http://localhost:4000`.
+
+## 🎨 Design Philosophy
+
+We follow the **"Modern Studio"** design system:
+- **Borders**: 2px solid black (`border-2 border-black`).
+- **Rounding**: Heavy rounding for a friendly yet professional feel (`rounded-[2.1rem]`).
+- **Shadows**: Hard, tactile shadows (`shadow-xl shadow-black/5`).
+- **Typography**: `Bricolage Grotesque` for a bold, editorial look.
+- **Micro-interactions**: Subtle hover scales and transitions via Framer Motion.
+
+## 📈 Analytics Workflow
+
+1.  **OAuth**: User connects YouTube via Google OAuth.
+2.  **Ingestion**: Backend pulls metrics from YouTube APIs.
+3.  **Normalization**: Data is processed into standardized metrics.
+4.  **Visualization**: Frontend displays performance trends and audience demographics via interactive charts.
+
+---
+Built with ❤️ by the CIAP Team.

@@ -1,13 +1,49 @@
-const withPWA = require("next-pwa")({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
-});
+import type { NextConfig } from "next";
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  /* config options here */
+const nextConfig: NextConfig = {
+  images: {
+    qualities: [30, 42, 75],
+  },
+  redirects: async () => {
+    return [
+      {
+        source: '/insights',
+        destination: '/dashboard',
+        permanent: true,
+      },
+      {
+        source: '/performance',
+        destination: '/dashboard',
+        permanent: true,
+      },
+      {
+        source: '/sessions',
+        destination: '/dashboard',
+        permanent: true,
+      },
+      {
+        source: '/settings',
+        destination: '/dashboard?tab=settings',
+        permanent: true,
+      },
+      {
+        source: '/discovery',
+        destination: '/dashboard?tab=market',
+        permanent: true,
+      },
+    ];
+  },
+  rewrites: async () => {
+    return {
+      beforeFiles: [
+        // Proxy API requests to backend
+        {
+          source: '/api-proxy/:path*',
+          destination: 'http://localhost:3000/:path*',
+        },
+      ],
+    };
+  },
 };
 
-module.exports = withPWA(nextConfig);
+export default nextConfig;
