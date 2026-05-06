@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${bricolage.variable} ${hanken.variable}`} suppressHydrationWarning>
-      <body className="font-[family-name:var(--font-hanken)] min-h-screen antialiased bg-[#E5E5E5] text-[#111111]">
+      <body className="font-[family-name:var(--font-hanken)] min-h-screen antialiased bg-[#FFF9F5] text-[#111111]">
         <QueryProvider>
           {children}
           <Toaster position="top-center" richColors closeButton />

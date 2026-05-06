@@ -12,10 +12,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         <Sidebar />
         <Header />
         
-        <main className="flex-1 min-h-screen relative pt-16 md:ml-20">
-          <div className="w-full h-full overflow-y-auto">
-            {children}
-          </div>
+        <main className="flex-1 relative pt-20 md:pt-16 md:ml-20">
+          {children}
         </main>
         
         {/* Mobile Fixed Nav (Bottom) */}

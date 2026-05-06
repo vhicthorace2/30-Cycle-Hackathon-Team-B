@@ -1,9 +1,13 @@
 'use client';
 import { motion } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Layout, ChartBar, Briefcase, User, Gear, SignOut, SquaresFour, Bell } from '@phosphor-icons/react';
+import { 
+  Layout, ChartBar, Briefcase, User, Gear, SignOut, 
+  SquaresFour, Bell, Users, IdentificationCard, ChatCircleText
+} from '@phosphor-icons/react';
 import { useAuthStore } from '@/lib/auth/store';
 import { useMeProfile } from '@/lib/api/hooks';
+import { useMemo } from 'react';
 
 const navItems = [
   { id: 'dashboard', label: 'Studio', icon: Layout, roles: ['creator', 'sme', 'agency', 'admin'] },
@@ -11,6 +15,7 @@ const navItems = [
   { id: 'market', label: 'Find', icon: Briefcase, roles: ['sme', 'agency', 'admin'] },
   { id: 'profile', label: 'Profile', icon: User, roles: ['creator', 'sme', 'agency', 'admin'] },
   { id: 'settings', label: 'Settings', icon: Gear, roles: ['creator', 'sme', 'agency', 'admin'] },
+  { id: 'chat', label: 'Chat', icon: ChatCircleText, roles: ['creator', 'sme', 'agency', 'admin'] },
 ];
 
 export default function Sidebar() {
@@ -21,6 +26,18 @@ export default function Sidebar() {
   const activeTab = searchParams.get('tab') || 'dashboard';
 
   const role = data?.profile?.role || user?.role || 'creator';
+  const isAdmin = role === 'admin';
+
+  const filteredNavItems = useMemo(() => {
+    return navItems.map(item => {
+      if (isAdmin) {
+        if (item.id === 'dashboard') return { ...item, label: 'Manage', icon: Users };
+        if (item.id === 'analytics') return { ...item, label: 'Audit', icon: IdentificationCard };
+        if (item.id === 'market') return null; // Hide market for admins
+      }
+      return item;
+    }).filter(Boolean);
+  }, [isAdmin]);
 
   const setActiveTab = (tab: string) => {
     router.push(`/dashboard?tab=${tab}`, { scroll: false });
@@ -32,8 +49,9 @@ export default function Sidebar() {
          <SquaresFour size={32} weight="bold" className="text-black group-hover:rotate-90 transition-transform duration-500" />
       </div>
       
-      <nav className="flex-1 flex flex-col items-center gap-10">
-         {navItems.map(item => {
+      <nav className="flex-1 flex flex-col items-center gap-6 overflow-y-auto w-full">
+         {filteredNavItems.map(item => {
+           if (!item) return null;
            const isAllowed = item.roles.includes(role);
            if (!isAllowed) return null;
 
@@ -53,8 +71,12 @@ export default function Sidebar() {
          })}
       </nav>
 
-      <button onClick={() => { logout(); window.location.href = '/login'; }} className="p-4 text-zinc-300 hover:text-red-500 transition-all active:scale-90" title="Logout">
-         <SignOut size={22} weight="bold" />
+      <button 
+        onClick={() => { logout(); window.location.href = '/login'; }} 
+        className="mb-8 p-3 text-zinc-300 hover:text-red-500 transition-all active:scale-90 group relative"
+        title="Logout"
+      >
+         <SignOut size={24} weight="bold" className="transition-transform group-hover:scale-110" />
       </button>
     </aside>
   );

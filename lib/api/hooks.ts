@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import api from './client';
 
 export interface HealthResponse {
@@ -123,6 +123,7 @@ export interface ChannelData {
   subscriberCount: number;
   totalViewCount: number;
   videoCount: number;
+  thumbnailUrl?: string | null;
 }
 
 export interface AudienceData {
@@ -249,6 +250,15 @@ export const useMeProfile = (enabled: boolean = true) => {
   });
 };
 
+export const useUpdateCreatorProfile = () => {
+  return useMutation({
+    mutationFn: async (data: { displayName?: string; bio?: string; avatarUrl?: string; location?: string; industry?: string; creatorTypes?: string[] }) => {
+      const response = await api.post('/users/me/onboard', data);
+      return response.data;
+    }
+  });
+};
+
 export const useUserPlatformStatus = (userId?: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['users', userId, 'platform-status'],
@@ -266,7 +276,7 @@ export const useAdminUsers = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ['users', 'admin', 'all'],
     queryFn: async () => {
-      const response = await api.get<AdminUsersResponse>('/users/admin/all');
+      const response = await api.get<AdminUserSummary[]>('/users/admin/all');
       return response.data;
     },
     enabled,
@@ -299,8 +309,8 @@ export const useAudienceInsights = (days: number = 30, enabled: boolean = true) 
     },
     enabled,
     // Don't refetch on window focus automatically to avoid slamming the synced cache
-    refetchOnWindowFocus: false, 
-    retry: 1, 
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 };
 
@@ -454,7 +464,7 @@ export const useCompareCreators = (creatorIds?: string[], searchQuery?: string, 
       const params: Record<string, string> = {};
       if (creatorIds?.length) params.creatorIds = creatorIds.join(',');
       if (searchQuery) params.query = searchQuery;
-      
+
       const response = await api.get<CreatorCompareResponse>('/sme/creators/compare', {
         params
       });

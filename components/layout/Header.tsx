@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { MagnifyingGlass, Bell } from '@phosphor-icons/react';
+import { MagnifyingGlass, Bell, SignOut } from '@phosphor-icons/react';
 import { useMeProfile } from '@/lib/api/hooks';
+import { useAuthStore } from '@/lib/auth/store';
 import { toast } from 'sonner';
 
 export default function Header() {
@@ -11,6 +12,12 @@ export default function Header() {
   const { data } = useMeProfile();
   const [search, setSearch] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('user_avatar');
+    if (saved) setLocalAvatar(saved);
+  }, []);
 
   const setActiveTab = (tab: string) => {
     router.push(`/dashboard?tab=${tab}`, { scroll: false });
@@ -50,16 +57,30 @@ export default function Header() {
           <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-black" />
         </button>
 
-        <div 
-          className="flex items-center gap-3 cursor-pointer group bg-white border-2 border-black px-3 md:px-4 py-1.5 md:py-2 rounded-full hover:bg-zinc-50 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" 
-          onClick={() => setActiveTab('profile')}
-        >
-          <div className="text-right hidden sm:block">
-             <p className="text-[10px] font-black leading-none tracking-tight text-black truncate max-w-[80px]">{data?.profile?.name || 'Account'}</p>
+        <div className="flex items-center gap-3">
+          <div 
+            className="flex items-center gap-3 cursor-pointer group bg-white border-2 border-black px-3 md:px-4 py-1.5 md:py-2 rounded-full hover:bg-zinc-50 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" 
+            onClick={() => setActiveTab('profile')}
+          >
+            <div className="text-right hidden sm:block">
+               <p className="text-[10px] font-black leading-none tracking-tight text-black truncate max-w-[80px]">{data?.profile?.name || 'Account'}</p>
+            </div>
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden bg-zinc-100 border border-black flex-shrink-0">
+              <img src={localAvatar || `https://i.pravatar.cc/400?u=${data?.profile?.id || 'demo'}`} alt="" className="w-full h-full object-cover" />
+            </div>
           </div>
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden bg-zinc-100 border border-black flex-shrink-0">
-            <img src={`https://i.pravatar.cc/100?u=${data?.profile?.id || 'demo'}`} alt="" className="w-full h-full object-cover" />
-          </div>
+          
+          <button 
+            onClick={() => {
+              const { logout } = useAuthStore.getState();
+              logout();
+              window.location.href = '/login';
+            }}
+            className="p-2.5 border-2 border-black rounded-full bg-white hover:bg-red-50 hover:text-red-600 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+            title="Sign Out"
+          >
+            <SignOut size={20} weight="bold" />
+          </button>
         </div>
       </div>
     </header>

@@ -1,8 +1,11 @@
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Layout, ChartBar, Briefcase, User, Gear } from '@phosphor-icons/react';
+import { 
+  Layout, ChartBar, Briefcase, User, Gear, Users, IdentificationCard, ChatCircleText
+} from '@phosphor-icons/react';
 import { useAuthStore } from '@/lib/auth/store';
 import { useMeProfile } from '@/lib/api/hooks';
+import { useMemo } from 'react';
 
 const navItems = [
   { id: 'dashboard', label: 'Studio', icon: Layout, roles: ['creator', 'sme', 'agency', 'admin'] },
@@ -10,6 +13,7 @@ const navItems = [
   { id: 'market', label: 'Find', icon: Briefcase, roles: ['sme', 'agency', 'admin'] },
   { id: 'profile', label: 'Profile', icon: User, roles: ['creator', 'sme', 'agency', 'admin'] },
   { id: 'settings', label: 'Settings', icon: Gear, roles: ['creator', 'sme', 'agency', 'admin'] },
+  { id: 'chat', label: 'Chat', icon: ChatCircleText, roles: ['creator', 'sme', 'agency', 'admin'] },
 ];
 
 export default function MobileNav() {
@@ -20,6 +24,18 @@ export default function MobileNav() {
   const activeTab = searchParams.get('tab') || 'dashboard';
 
   const role = data?.role || user?.role || 'creator';
+  const isAdmin = role === 'admin';
+
+  const filteredNavItems = useMemo(() => {
+    return navItems.map(item => {
+      if (isAdmin) {
+        if (item.id === 'dashboard') return { ...item, label: 'Manage', icon: Users };
+        if (item.id === 'analytics') return { ...item, label: 'Audit', icon: IdentificationCard };
+        if (item.id === 'market') return null;
+      }
+      return item;
+    }).filter(Boolean);
+  }, [isAdmin]);
 
   const setActiveTab = (tab: string) => {
     router.push(`/dashboard?tab=${tab}`, { scroll: false });
@@ -28,7 +44,8 @@ export default function MobileNav() {
   return (
     <div className="md:hidden fixed bottom-6 left-6 right-6 z-[100]">
       <nav className="bg-white border-2 border-black rounded-[2.5rem] h-20 flex items-center justify-around px-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
+          if (!item) return null;
           const isAllowed = item.roles.includes(role);
           if (!isAllowed) return null;
 
