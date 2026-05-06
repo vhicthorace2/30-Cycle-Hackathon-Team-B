@@ -90,6 +90,7 @@ export class CreatorInsightsService {
         subscriberCount: channel.subscriberCount ?? 0,
         totalViewCount: Number(channel.totalViewCount ?? 0),
         videoCount: channel.videoCount ?? 0,
+        thumbnailUrl: channel.thumbnailUrl ?? null,
       },
       audience: aggregate,
       influenceScore: profile?.influenceScore ?? null,

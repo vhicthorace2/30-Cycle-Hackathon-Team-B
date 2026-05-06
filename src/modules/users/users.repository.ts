@@ -199,4 +199,20 @@ export class UsersRepository {
 
     return Number(result[0]?.value ?? 0);
   }
+
+  async update(id: number, data: Partial<User>): Promise<User> {
+    const [updated] = await this.db
+      .update(users)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.db.delete(users).where(eq(users.id, id));
+  }
 }

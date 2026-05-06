@@ -15,6 +15,9 @@ export class CreatorChannelSummaryDto {
 
   @ApiProperty({ example: 120 })
   videoCount!: number;
+
+  @ApiProperty({ example: 'https://yt3.ggpht.com/...', nullable: true })
+  thumbnailUrl?: string | null;
 }
 
 export class CreatorAudienceMetricsDto {
