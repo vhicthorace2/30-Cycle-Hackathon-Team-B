@@ -6,12 +6,18 @@ import {
   youtubeChannels,
   youtubeVideos,
   youtubeDailyAnalytics,
+  youtubeVideoComments,
+  youtubeAudienceDemographics,
   NewYoutubeChannel,
   NewYoutubeVideo,
   NewYoutubeDailyAnalytics,
   YoutubeChannel,
   YoutubeVideo,
   YoutubeDailyAnalytics,
+  NewYoutubeVideoComment,
+  NewYoutubeAudienceDemographic,
+  YoutubeVideoComment,
+  YoutubeAudienceDemographic,
 } from '@database/drizzle/schema';
 
 /**
@@ -97,6 +103,61 @@ export class YoutubeRepository {
           averageViewDurationSeconds: sql`excluded.average_view_duration_seconds`,
           subscribersGained: sql`excluded.subscribers_gained`,
           subscribersLost: sql`excluded.subscribers_lost`,
+        },
+      })
+      .returning();
+  }
+
+  /**
+   * Upsert top-level comments for videos.
+   * Uses SQL EXCLUDED to update each row with its own incoming values.
+   */
+  async upsertVideoComments(
+    comments: NewYoutubeVideoComment[],
+  ): Promise<YoutubeVideoComment[]> {
+    if (comments.length === 0) return [];
+
+    return this.db
+      .insert(youtubeVideoComments)
+      .values(comments)
+      .onConflictDoUpdate({
+        target: youtubeVideoComments.youtubeCommentId,
+        set: {
+          commentType: sql`excluded.comment_type`,
+          authorDisplayName: sql`excluded.author_display_name`,
+          authorChannelId: sql`excluded.author_channel_id`,
+          textDisplay: sql`excluded.text_display`,
+          textOriginal: sql`excluded.text_original`,
+          likeCount: sql`excluded.like_count`,
+          publishedAt: sql`excluded.published_at`,
+          updatedAt: sql`excluded.updated_at`,
+        },
+      })
+      .returning();
+  }
+
+  /**
+   * Upsert audience demographics for a channel and window.
+   * Uses SQL EXCLUDED to update each row with its own incoming values.
+   */
+  async upsertAudienceDemographics(
+    demographics: NewYoutubeAudienceDemographic[],
+  ): Promise<YoutubeAudienceDemographic[]> {
+    if (demographics.length === 0) return [];
+
+    return this.db
+      .insert(youtubeAudienceDemographics)
+      .values(demographics)
+      .onConflictDoUpdate({
+        target: [
+          youtubeAudienceDemographics.channelId,
+          youtubeAudienceDemographics.dimensionType,
+          youtubeAudienceDemographics.dimensionValue,
+          youtubeAudienceDemographics.startDate,
+          youtubeAudienceDemographics.endDate,
+        ],
+        set: {
+          viewerPercentage: sql`excluded.viewer_percentage`,
         },
       })
       .returning();

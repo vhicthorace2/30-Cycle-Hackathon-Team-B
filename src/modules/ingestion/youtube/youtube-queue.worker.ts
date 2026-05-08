@@ -26,12 +26,12 @@ export class YoutubeQueueWorker implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Initialize and register the BullMQ worker when module loads.
-   * Worker will start consuming jobs from the youtube-metrics queue.
+  * Worker will start consuming jobs from the youtube queue.
    */
   onModuleInit(): void {
     try {
       const config = this.queueConfig.getBaseConfig();
-      const queueName = 'youtube-metrics';
+    const queueName = 'youtube';
 
       this.worker = new BullWorker(
         queueName,
@@ -43,7 +43,7 @@ export class YoutubeQueueWorker implements OnModuleInit, OnModuleDestroy {
         },
         {
           ...config,
-          concurrency: parseInt(
+          concurrency: Number.parseInt(
             process.env.BULLMQ_WORKER_CONCURRENCY || '2',
             10,
           ),

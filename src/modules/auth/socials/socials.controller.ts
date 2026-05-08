@@ -198,13 +198,38 @@ export class SocialsController {
         },
         analyticsStatus: 'success',
         analyticsWarning: null,
+        demographicsStatus: 'success',
+        demographicsWarning: null,
         limits: {
           days: 30,
           maxVideos: 10,
         },
+        comments: [
+          {
+            videoId: 'abc123',
+            commentCount: 42,
+            sampleComments: [
+              {
+                commentId: 'comment-1',
+                textDisplay: 'Great video!',
+                authorDisplayName: 'Viewer One',
+                likeCount: 3,
+                publishedAt: '2026-04-01T12:00:00.000Z',
+                commentType: 'top',
+              },
+            ],
+          },
+        ],
+        demographics: {
+          ageGroups: [{ ageGroup: '18-24', viewerPercentage: 0.32 }],
+          genders: [{ gender: 'female', viewerPercentage: 0.48 }],
+          countries: [{ country: 'US', viewerPercentage: 0.22 }],
+          startDate: '2026-03-10',
+          endDate: '2026-04-08',
+        },
         bullmq: {
-          queue: 'youtube-metrics',
-          jobName: 'youtube-metrics.pull',
+          queue: 'youtube',
+          jobName: 'youtube.ingestion',
           payload: {
             provider: 'google',
             userId: 7,
@@ -225,7 +250,20 @@ export class SocialsController {
     @Req() request: AuthenticatedRequest,
     @Query() query: YoutubeMetricsQueryDto,
   ) {
-    return this.socialsService.getYoutubeMetrics(request.user, query);
+    const result = await this.socialsService.getYoutubeMetrics(
+      request.user,
+      query,
+    );
+
+    if (Array.isArray(result.comments)) {
+      result.comments = result.comments.map((entry) => ({
+        ...entry,
+        topComments: [],
+        latestComments: [],
+      }));
+    }
+
+    return result;
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard, AbilitiesGuard)
@@ -241,8 +279,8 @@ export class SocialsController {
     status: 200,
     schema: {
       example: {
-        queue: 'youtube-metrics',
-        jobName: 'youtube-metrics.pull',
+        queue: 'youtube',
+        jobName: 'youtube.ingestion',
         payload: {
           provider: 'google',
           userId: 7,

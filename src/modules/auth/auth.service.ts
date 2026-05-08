@@ -280,10 +280,14 @@ export class AuthService {
 
     let user: User | null = null;
     let createdNewUser = false;
-    const existingOauth = await this.authRepository.findOauthAccount(
+    const existingOauthAccounts = await this.authRepository.findOauthAccounts(
       'google',
       googleSubject,
     );
+    const existingOauth =
+      existingOauthAccounts.find((account) => account.purpose === 'login') ||
+      existingOauthAccounts[0] ||
+      null;
     if (existingOauth) {
       user = await this.usersRepository.findByIdOrNull(existingOauth.userId);
     } else {
@@ -321,6 +325,7 @@ export class AuthService {
       await this.authRepository.createOauthAccount({
         userId: user.id,
         provider: 'google',
+        purpose: 'login',
         providerUserId: googleSubject,
         email,
       });
