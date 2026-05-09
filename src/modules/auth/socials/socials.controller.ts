@@ -45,7 +45,7 @@ export class SocialsController {
   @Public()
   @Get('oauth2/google/login')
   @ApiOperation({
-    summary: 'Prepare Google OAuth2 authorization flow for login',
+    summary: 'Prepare Google OAuth2 authorization flow for login(Client)',
   })
   @ApiQuery({
     name: 'role',
@@ -77,7 +77,7 @@ export class SocialsController {
 
   @Public()
   @Get('google/login/callback')
-  @ApiOperation({ summary: 'Google OAuth2 login callback endpoint' })
+  @ApiOperation({ summary: 'Google OAuth2 login callback endpoint (Internal)' })
   @ApiResponse({
     status: 200,
     type: AuthResponseDto,
@@ -132,7 +132,7 @@ export class SocialsController {
   @HttpCode(HttpStatus.OK)
   @Post('google/token/refresh')
   @ApiOperation({
-    summary: 'Refresh stored Google OAuth access token for current user',
+    summary: 'Refresh stored Google OAuth access token for current user(Dev)',
   })
   @ApiResponse({
     status: 200,
@@ -156,7 +156,7 @@ export class SocialsController {
   @ApiBearerAuth('access-token')
   @Get('google/youtube/metrics')
   @ApiOperation({
-    summary: 'Pull YouTube channel, latest 10 videos, and analytics metrics',
+    summary: 'Pull YouTube channel, latest 10 videos, and analytics metrics(Dev)',
   })
   @ApiQuery({
     name: 'days',
@@ -273,7 +273,7 @@ export class SocialsController {
   @Get('google/youtube/metrics/job-payload')
   @ApiOperation({
     summary:
-      'Prepare BullMQ payload contract for YouTube metrics pull (no enqueue)',
+      'Prepare BullMQ payload contract for YouTube metrics pull (no enqueue, Internal)',
   })
   @ApiResponse({
     status: 200,
