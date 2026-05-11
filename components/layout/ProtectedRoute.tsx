@@ -26,7 +26,7 @@ type MeProfileResponse = {
 export default function ProtectedRoute({ children }: { 
   children: React.ReactNode; 
 }) {
-  const { isAuthenticated, user, _hasHydrated } = useAuthStore();
+  const { isAuthenticated, _hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function ProtectedRoute({ children }: {
           useAuthStore.getState().accessToken || '',
           useAuthStore.getState().refreshToken || ''
         );
-      } catch (err) {
+      } catch {
         router.replace('/login');
       }
     };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useMemo, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -94,15 +94,6 @@ export default function DashboardPage() {
   const adminRoles = useRoles(isAdmin && activeTab === 'dashboard');
 
   const updateCreatorProfile = useUpdateCreatorProfile();
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
-
-  useEffect(() => {
-    if (me.data?.profile) {
-      setDisplayName(me.data.profile.displayName || me.data.profile.name || '');
-      setBio(me.data.profile.bio || '');
-    }
-  }, [me.data?.profile]);
 
   const setTab = (tab: DashboardTab) => {
     router.push(`/dashboard?tab=${tab}`, { scroll: false });
@@ -130,9 +121,13 @@ export default function DashboardPage() {
     }
 
     try {
+      const formData = new FormData(event.currentTarget);
+      const displayName = String(formData.get('displayName') || '').trim();
+      const bio = String(formData.get('bio') || '').trim();
+
       await updateCreatorProfile.mutateAsync({
-        displayName: displayName.trim() || undefined,
-        bio: bio.trim() || undefined,
+        displayName: displayName || undefined,
+        bio: bio || undefined,
         creatorTypes: me.data?.profile.creatorTypes || [],
       });
       toast.success('Profile updated successfully.');
@@ -274,17 +269,17 @@ export default function DashboardPage() {
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider mb-2">Display name</label>
                 <input
-                  value={displayName}
-                  onChange={(event) => setDisplayName(event.target.value)}
+                  name="displayName"
+                  defaultValue={profile.displayName || profile.name}
                   className="w-full rounded-2xl border-2 border-black px-4 py-3 text-sm font-semibold"
                 />
               </div>
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider mb-2">Bio</label>
                 <textarea
+                  name="bio"
                   rows={4}
-                  value={bio}
-                  onChange={(event) => setBio(event.target.value)}
+                  defaultValue={profile.bio || ''}
                   className="w-full rounded-2xl border-2 border-black px-4 py-3 text-sm font-semibold"
                 />
               </div>

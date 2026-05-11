@@ -2,7 +2,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   Layout, ChartBar, Briefcase, User, Gear, SignOut, 
-  SquaresFour, Bell, Users, IdentificationCard, ChatCircleText
+  SquaresFour, Users, IdentificationCard, ChatCircleText
 } from '@phosphor-icons/react';
 import { useAuthStore } from '@/lib/auth/store';
 import { useMeProfile } from '@/lib/api/hooks';

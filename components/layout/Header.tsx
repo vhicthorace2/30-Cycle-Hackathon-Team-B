@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { MagnifyingGlass, Bell, SignOut } from '@phosphor-icons/react';
 import { useMeProfile } from '@/lib/api/hooks';
 import { useAuthStore } from '@/lib/auth/store';
@@ -9,17 +9,13 @@ import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { toast } from 'sonner';
 
 export default function Header() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { data } = useMeProfile();
   const [search, setSearch] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('user_avatar');
-    if (saved) setLocalAvatar(saved);
-  }, []);
+  const [localAvatar] = useState<string | null>(
+    () => (typeof window === 'undefined' ? null : localStorage.getItem('user_avatar'))
+  );
 
   const setActiveTab = (tab: string) => {
     router.push(`/dashboard?tab=${tab}`, { scroll: false });
