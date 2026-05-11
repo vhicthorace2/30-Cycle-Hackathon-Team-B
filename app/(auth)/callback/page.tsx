@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth/store';
 import api from '@/lib/api/client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { getPostLoginRoute } from '@/lib/auth/routes';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,7 +17,6 @@ export default function Callback() {
     const handleCallback = async () => {
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get('code');
-      const state = searchParams.get('state');
 
       if (!code) {
         router.push('/login');
@@ -28,11 +28,11 @@ export default function Callback() {
         // We do this by checking if we have an active session already
         const { accessToken } = useAuthStore.getState();
         
-        let endpoint = '/auth/socials/google/login/callback';
+        let endpoint = API_ENDPOINTS.social.googleLoginCallback;
         
         if (accessToken) {
           // If we already have a token, we are likely connecting a social account
-          endpoint = '/ingestion/youtube/oauth2/callback';
+          endpoint = API_ENDPOINTS.ingestion.youtubeOauthCallback;
         }
 
         const { data } = await api.get(`${endpoint}${window.location.search}`, { 
@@ -57,7 +57,7 @@ export default function Callback() {
       }
     };
     handleCallback();
-  }, [router, setAuth]);
+  }, [queryClient, router, setAuth]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

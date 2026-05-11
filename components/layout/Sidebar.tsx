@@ -1,5 +1,4 @@
 'use client';
-import { motion } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   Layout, ChartBar, Briefcase, User, Gear, SignOut, 
@@ -8,6 +7,8 @@ import {
 import { useAuthStore } from '@/lib/auth/store';
 import { useMeProfile } from '@/lib/api/hooks';
 import { useMemo } from 'react';
+import api, { skipAuthRedirectConfig } from '@/lib/api/client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
 
 const navItems = [
   { id: 'dashboard', label: 'Studio', icon: Layout, roles: ['creator', 'sme', 'agency', 'admin'] },
@@ -72,7 +73,15 @@ export default function Sidebar() {
       </nav>
 
       <button 
-        onClick={() => { logout(); window.location.href = '/login'; }} 
+        onClick={async () => {
+          try {
+            await api.post(API_ENDPOINTS.auth.logout, undefined, skipAuthRedirectConfig);
+          } catch {
+            // continue local logout even if backend session is already invalid
+          }
+          logout();
+          window.location.href = '/login';
+        }} 
         className="mb-8 p-3 text-zinc-300 hover:text-red-500 transition-all active:scale-90 group relative"
         title="Logout"
       >

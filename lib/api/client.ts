@@ -1,5 +1,7 @@
 import axios from 'axios';
+import type { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../auth/store';
+import { API_ENDPOINTS } from './endpoints';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
@@ -7,12 +9,15 @@ const api = axios.create({
 });
 
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: Array<{ resolve: (token: string) => void; reject: (error: unknown) => void }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (token) prom.resolve(token);
-    else prom.reject(error);
+type RetryableAxiosConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+type SkipRedirectAxiosConfig = AxiosRequestConfig & { headers?: Record<string, string> };
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((item) => {
+    if (token) item.resolve(token);
+    else item.reject(error);
   });
   failedQueue = [];
 };
@@ -26,8 +31,9 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryableAxiosConfig | undefined;
+    if (!originalRequest) return Promise.reject(error);
     const skipRedirect = originalRequest.headers?.['X-Skip-Auth-Redirect'] === 'true';
 
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/')) {
@@ -36,7 +42,7 @@ api.interceptors.response.use(
       }
 
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then((token) => {
           originalRequest.headers.Authorization = `Bearer ${token}`;
@@ -51,8 +57,8 @@ api.interceptors.response.use(
         const { refreshToken } = useAuthStore.getState();
         if (!refreshToken) throw new Error('No refresh token available');
         
-        const refreshUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3000'}/auth/refresh`;
-        const { data } = await axios.post(refreshUrl, { refreshToken }, { withCredentials: true });
+        const refreshUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3000'}${API_ENDPOINTS.auth.refresh}`;
+        const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(refreshUrl, { refreshToken }, { withCredentials: true });
         const newToken = data.accessToken;
         const newRefreshToken = data.refreshToken;
         useAuthStore.getState().updateToken(newToken, newRefreshToken);
@@ -72,5 +78,10 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const skipAuthRedirectConfig: SkipRedirectAxiosConfig = {
+  withCredentials: true,
+  headers: { 'X-Skip-Auth-Redirect': 'true' },
+};
 
 export default api;

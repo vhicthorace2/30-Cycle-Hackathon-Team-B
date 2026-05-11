@@ -2,34 +2,58 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth/store';
-import api from '@/lib/api/client';
+import api, { skipAuthRedirectConfig } from '@/lib/api/client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
 
-export default function ProtectedRoute({ children, requiredRole }: { 
+type VerifyResponse = {
+  valid: boolean;
+  userId: string | number;
+  email: string;
+  tenantId?: string | number;
+  role?: 'admin' | 'user' | 'sme' | 'creator';
+};
+
+type MeProfileResponse = {
+  profile: {
+    id: string | number;
+    name: string;
+    email: string;
+    tenantId: string | number;
+    role: 'admin' | 'user' | 'sme' | 'creator';
+  };
+};
+
+export default function ProtectedRoute({ children }: { 
   children: React.ReactNode; 
-  requiredRole?: string;
 }) {
   const { isAuthenticated, user, _hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    // 1. Wait for Zustand store to rehydrate from localStorage
     if (!_hasHydrated) return;
-
-    // 2. If already authenticated via localStorage, we are good
     if (isAuthenticated) return;
-
-    // 3. If not authenticated, try to hydrate from backend session (httpOnly cookies)
     const checkSession = async () => {
       try {
-        // Use a direct axios call or a flag to bypass the aggressive 401 interceptor logout
-        const { data } = await api.get('/users/me', { 
-          withCredentials: true,
-          // Custom header to tell interceptor not to logout on 401 for this specific check
-          headers: { 'X-Skip-Auth-Redirect': 'true' } 
-        } as any);
-        useAuthStore.getState().setAuth(data.user, data.accessToken || '', data.refreshToken || '');
+        const verify = await api.get<VerifyResponse>(API_ENDPOINTS.auth.verify, skipAuthRedirectConfig);
+        if (!verify.data.valid) {
+          router.replace('/login');
+          return;
+        }
+
+        const profile = await api.get<MeProfileResponse>(API_ENDPOINTS.users.me, skipAuthRedirectConfig);
+        const user = profile.data.profile;
+        useAuthStore.getState().setAuth(
+          {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            tenantId: user.tenantId,
+          },
+          useAuthStore.getState().accessToken || '',
+          useAuthStore.getState().refreshToken || ''
+        );
       } catch (err) {
-        // No valid session cookie either, now we can safely redirect
         router.replace('/login');
       }
     };

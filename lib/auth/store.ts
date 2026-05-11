@@ -2,9 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { clearAuthCookies, setAuthCookies } from './cookies';
 
-type Role = 'admin' | 'user' | 'sme' | 'creator';
+export type Role = 'admin' | 'user' | 'sme' | 'creator';
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -12,10 +12,15 @@ interface User {
   tenantId: string;
 }
 
-interface Tenant {
+export interface Tenant {
   id: string;
   name: string;
 }
+
+type AuthUserInput = Omit<User, 'id' | 'tenantId'> & {
+  id: string | number;
+  tenantId: string | number;
+};
 
 interface AuthState {
   user: User | null;
@@ -25,7 +30,7 @@ interface AuthState {
   isAuthenticated: boolean;
   _hasHydrated: boolean;
   setHasHydrated: (val: boolean) => void;
-  setAuth: (user: User, token: string, refreshToken: string) => void;
+  setAuth: (user: AuthUserInput, token: string, refreshToken: string) => void;
   updateToken: (token: string, refreshToken?: string) => void;
   switchTenant: (tenant: Tenant) => void;
   logout: () => void;
@@ -42,8 +47,22 @@ export const useAuthStore = create<AuthState>()(
       _hasHydrated: false,
       setHasHydrated: (val) => set({ _hasHydrated: val }),
       setAuth: (user, token, refreshToken) => {
-        setAuthCookies(token, refreshToken);
-        set({ user, accessToken: token, refreshToken, isAuthenticated: true, currentTenant: { id: user.tenantId, name: 'Personal' } });
+        const normalizedUser: User = {
+          ...user,
+          id: String(user.id),
+          tenantId: String(user.tenantId),
+        };
+
+        if (token && refreshToken) {
+          setAuthCookies(token, refreshToken);
+        }
+        set({
+          user: normalizedUser,
+          accessToken: token,
+          refreshToken,
+          isAuthenticated: true,
+          currentTenant: { id: normalizedUser.tenantId, name: 'Personal' },
+        });
       },
       updateToken: (token, refreshToken) => set((state) => ({ accessToken: token, refreshToken: refreshToken || state.refreshToken })),
       switchTenant: (tenant) => set({ currentTenant: tenant }),

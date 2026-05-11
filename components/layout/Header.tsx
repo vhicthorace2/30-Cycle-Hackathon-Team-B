@@ -4,6 +4,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { MagnifyingGlass, Bell, SignOut } from '@phosphor-icons/react';
 import { useMeProfile } from '@/lib/api/hooks';
 import { useAuthStore } from '@/lib/auth/store';
+import api, { skipAuthRedirectConfig } from '@/lib/api/client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
 import { toast } from 'sonner';
 
 export default function Header() {
@@ -71,7 +73,12 @@ export default function Header() {
           </div>
           
           <button 
-            onClick={() => {
+            onClick={async () => {
+              try {
+                await api.post(API_ENDPOINTS.auth.logout, undefined, skipAuthRedirectConfig);
+              } catch {
+                // continue local logout even if backend session is already invalid
+              }
               const { logout } = useAuthStore.getState();
               logout();
               window.location.href = '/login';
