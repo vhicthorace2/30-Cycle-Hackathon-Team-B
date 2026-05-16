@@ -54,4 +54,32 @@ export class CreatorInsightsCacheService {
       this.ttlHours,
     );
   }
+
+  async invalidateAudience(userId: number) {
+    // Invalidate for common window values
+    await Promise.all([
+      this.cache.delete(`${this.prefix}:audience:${userId}:7`),
+      this.cache.delete(`${this.prefix}:audience:${userId}:30`),
+      this.cache.delete(`${this.prefix}:audience:${userId}:90`),
+    ]);
+  }
+
+  async invalidateContent(userId: number) {
+    // Invalidate for common limit values
+    await Promise.all([
+      this.cache.delete(`${this.prefix}:content:${userId}:10`),
+      this.cache.delete(`${this.prefix}:content:${userId}:20`),
+      this.cache.delete(`${this.prefix}:content:${userId}:50`),
+    ]);
+  }
+
+  async invalidatePerformance(userId: number) {
+    // Invalidate for common window/limit values
+    await Promise.all([
+      this.cache.delete(`${this.prefix}:performance:${userId}:7:10`),
+      this.cache.delete(`${this.prefix}:performance:${userId}:30:10`),
+      this.cache.delete(`${this.prefix}:performance:${userId}:30:20`),
+      this.cache.delete(`${this.prefix}:performance:${userId}:90:10`),
+    ]);
+  }
 }

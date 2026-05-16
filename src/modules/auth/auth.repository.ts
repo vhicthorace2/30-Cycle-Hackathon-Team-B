@@ -19,6 +19,21 @@ export class AuthRepository {
     return created;
   }
 
+  async findAllAuditLogs(limit = 50): Promise<AuditLog[]> {
+    return this.db.query.auditLogs.findMany({
+      limit,
+      orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+    });
+  }
+
+  async findAuditLogsByUserId(userId: number, limit = 20): Promise<AuditLog[]> {
+    return this.db.query.auditLogs.findMany({
+      where: eq(auditLogs.userId, userId),
+      limit,
+      orderBy: (logs, { desc }) => [desc(logs.createdAt)],
+    });
+  }
+
   async findOauthAccount(
     provider: 'google' | 'github' | 'linkedin',
     providerUserId: string,

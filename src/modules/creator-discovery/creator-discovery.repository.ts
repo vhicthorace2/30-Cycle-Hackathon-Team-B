@@ -10,11 +10,49 @@ import {
   youtubeDailyAnalytics,
   youtubeVideos,
   youtubeMlScores,
+  scoutedCreators,
 } from '@database/drizzle/schema';
 
 @Injectable()
 export class CreatorDiscoveryRepository {
   constructor(@Inject(DATABASE_PROVIDER) private readonly db: Database) {}
+
+  // ... existing methods ...
+
+  async scoutCreator(smeId: number, creatorId: number) {
+    const [created] = await this.db
+      .insert(scoutedCreators)
+      .values({ smeId, creatorId })
+      .onConflictDoNothing()
+      .returning();
+    return created;
+  }
+
+  async unscoutCreator(smeId: number, creatorId: number) {
+    await this.db
+      .delete(scoutedCreators)
+      .where(
+        and(
+          eq(scoutedCreators.smeId, smeId),
+          eq(scoutedCreators.creatorId, creatorId),
+        ),
+      );
+  }
+
+  async getScoutedCreators(smeId: number) {
+    return this.db
+      .select({
+        userId: users.id,
+        displayName: userProfiles.displayName,
+        influenceScore: userProfiles.influenceScore,
+        audienceSize: sql<number>`coalesce(${userProfiles.audienceSize}, 0)`,
+        status: scoutedCreators.status,
+      })
+      .from(scoutedCreators)
+      .innerJoin(users, eq(users.id, scoutedCreators.creatorId))
+      .innerJoin(userProfiles, eq(userProfiles.userId, users.id))
+      .where(eq(scoutedCreators.smeId, smeId));
+  }
 
   async searchCreators(params: {
     query?: string;
@@ -143,6 +181,15 @@ export class CreatorDiscoveryRepository {
       .leftJoin(youtubeMlScores, eq(youtubeMlScores.videoId, youtubeVideos.id))
       .where(eq(youtubeVideos.channelId, channelId))
       .orderBy(desc(youtubeVideos.publishedAt))
+      .limit(limit);
+  }
+
+  async getContentItemsForUser(userId: number, limit: number) {
+    return this.db
+      .select()
+      .from(contentItems)
+      .where(eq(contentItems.userId, userId))
+      .orderBy(desc(contentItems.createdAt))
       .limit(limit);
   }
 }

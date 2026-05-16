@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, count, eq } from 'drizzle-orm';
+import { and, count, eq, sum, sql } from 'drizzle-orm';
 import { DATABASE_PROVIDER } from '@database/database.module';
 import type { Database } from '@database/database.module';
 import {
@@ -7,6 +7,9 @@ import {
   tenants,
   users,
   userProfiles,
+  youtubeChannels,
+  auditLogs,
+  contentItems,
 } from '@database/drizzle/schema';
 import type {
   NewTenant,
@@ -15,6 +18,7 @@ import type {
   User,
   NewUserProfile,
   UserProfile,
+  NewAuditLog,
 } from '@database/drizzle/schema';
 
 @Injectable()
@@ -124,10 +128,16 @@ export class UsersRepository {
   /**
    * Get all users (pagination ready)
    */
-  async findAll(limit = 10, offset = 0): Promise<User[]> {
+  async findAll(
+    limit = 10,
+    offset = 0,
+  ): Promise<(User & { profile?: UserProfile | null })[]> {
     return this.db.query.users.findMany({
       limit,
       offset,
+      with: {
+        profile: true,
+      },
     });
   }
 
@@ -138,11 +148,14 @@ export class UsersRepository {
     tenantId: number,
     limit = 10,
     offset = 0,
-  ): Promise<User[]> {
+  ): Promise<(User & { profile?: UserProfile | null })[]> {
     return this.db.query.users.findMany({
       where: eq(users.tenantId, tenantId),
       limit,
       offset,
+      with: {
+        profile: true,
+      },
     });
   }
 
@@ -151,6 +164,13 @@ export class UsersRepository {
       where: and(eq(users.id, id), eq(users.tenantId, tenantId)),
     });
 
+    return result || null;
+  }
+
+  async findByResetToken(token: string): Promise<User | null> {
+    const result = await this.db.query.users.findFirst({
+      where: eq(users.resetToken, token),
+    });
     return result || null;
   }
 
@@ -214,5 +234,61 @@ export class UsersRepository {
 
   async delete(id: number): Promise<void> {
     await this.db.delete(users).where(eq(users.id, id));
+  }
+
+  async getPlatformStats() {
+    const [userCounts, viewSum] = await Promise.all([
+      this.db
+        .select({ role: users.role, count: count() })
+        .from(users)
+        .groupBy(users.role),
+      this.db
+        .select({ totalViews: sum(youtubeChannels.totalViewCount) })
+        .from(youtubeChannels),
+    ]);
+
+    return {
+      userCounts,
+      totalViews: Number(viewSum[0]?.totalViews ?? 0),
+    };
+  }
+
+  async getPlatformGrowthTimeSeries(days = 30) {
+    const result = await this.db
+      .select({
+        date: sql<string>`DATE(${users.createdAt})`,
+        count: count(),
+      })
+      .from(users)
+      .where(
+        sql`${users.createdAt} >= NOW() - INTERVAL '${sql.raw(String(days))} days'`,
+      )
+      .groupBy(sql`DATE(${users.createdAt})`)
+      .orderBy(sql`DATE(${users.createdAt})`);
+
+    return result;
+  }
+
+  async getTotalAudienceReach(): Promise<number> {
+    const result = await this.db
+      .select({ value: sum(userProfiles.audienceSize) })
+      .from(userProfiles);
+    return Number(result[0]?.value ?? 0);
+  }
+
+  async getContentItemCount(): Promise<number> {
+    const result = await this.db.select({ value: count() }).from(contentItems);
+    return Number(result[0]?.value ?? 0);
+  }
+
+  async createAuditLog(data: NewAuditLog): Promise<void> {
+    await this.db.insert(auditLogs).values(data);
+  }
+
+  async getAvgInfluenceScore(): Promise<number> {
+    const result = await this.db
+      .select({ value: sql<number>`AVG(${userProfiles.influenceScore})` })
+      .from(userProfiles);
+    return Number(result[0]?.value ?? 0);
   }
 }

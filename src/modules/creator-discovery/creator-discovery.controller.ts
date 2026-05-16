@@ -1,11 +1,15 @@
 import {
   Controller,
   Get,
+  Post,
+  Delete,
   Query,
   UseGuards,
   Param,
   ParseIntPipe,
+  Req,
 } from '@nestjs/common';
+import { AuthenticatedRequest } from '@/types/express';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -165,5 +169,35 @@ export class CreatorDiscoveryController {
       days,
       limit,
     });
+  }
+
+  @Post(':id/scout')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Scout/Shortlist a creator' })
+  @Roles('sme')
+  async scoutCreator(
+    @Param('id', ParseIntPipe) creatorId: number,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.discoveryService.scoutCreator(request.user.id, creatorId);
+  }
+
+  @Delete(':id/scout')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Remove a creator from shortlist' })
+  @Roles('sme')
+  async unscoutCreator(
+    @Param('id', ParseIntPipe) creatorId: number,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.discoveryService.unscoutCreator(request.user.id, creatorId);
+  }
+
+  @Get('scouted')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get all scouted creators for current SME' })
+  @Roles('sme')
+  async getScoutedCreators(@Req() request: AuthenticatedRequest) {
+    return this.discoveryService.getScoutedCreators(request.user.id);
   }
 }

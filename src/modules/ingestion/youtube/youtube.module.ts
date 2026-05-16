@@ -13,6 +13,8 @@ import { YoutubeMetricsProcessor } from './processor/youtube-metrics.processor';
 import { YoutubeCacheService } from './services/youtube-cache.service';
 import { YoutubeNormalizationService } from './services/youtube-normalization.service';
 
+import { CreatorInsightsModule } from '@modules/creator-insights/creator-insights.module';
+
 /**
  * YouTube Ingestion Module
  *
@@ -28,7 +30,14 @@ import { YoutubeNormalizationService } from './services/youtube-normalization.se
  * - Metrics: Own processor handles scoring
  */
 @Module({
-  imports: [AuthModule, CacheModule, DatabaseModule, HealthModule, QueueModule],
+  imports: [
+    AuthModule,
+    CacheModule,
+    DatabaseModule,
+    HealthModule,
+    QueueModule,
+    CreatorInsightsModule,
+  ],
   controllers: [YoutubeIngestionController],
   providers: [
     YoutubeIngestionService,

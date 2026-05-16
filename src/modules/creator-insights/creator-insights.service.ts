@@ -113,47 +113,89 @@ export class CreatorInsightsService {
       return cached as unknown as CreatorContentInsightDto;
     }
 
-    const channel = await this.repository.getLatestChannelForUser(actor.id);
-    if (!channel) {
-      const emptyResponse: CreatorContentInsightDto = {
-        youtubeChannelId: null,
-        items: [],
+    const [channel, manualItems] = await Promise.all([
+      this.repository.getLatestChannelForUser(actor.id),
+      this.repository.getContentItemsForUser(actor.id, limit),
+    ]);
+
+    let items: CreatorContentItemDto[] = [];
+
+    if (channel) {
+      const rows = await this.repository.getRecentVideosWithScores(
+        channel.id,
         limit,
-      };
-      await this.cache.setContent(actor.id, limit, emptyResponse);
-      return emptyResponse;
+      );
+      items = rows.map((row) => ({
+        youtubeVideoId: row.video.youtubeVideoId,
+        title: row.video.videoTitle ?? null,
+        viewCount: row.video.viewCount ?? 0,
+        likeCount: row.video.likeCount ?? 0,
+        commentCount: row.video.commentCount ?? 0,
+        publishedAt: row.video.publishedAt
+          ? row.video.publishedAt.toISOString()
+          : null,
+        score: {
+          engagementScore: row.score?.engagementScore ?? null,
+          growthScore: row.score?.growthScore ?? null,
+          recommendationScore: row.score?.recommendationScore ?? null,
+          performanceRank: row.score?.performanceRank ?? null,
+        },
+      }));
     }
 
-    const rows = await this.repository.getRecentVideosWithScores(
-      channel.id,
-      limit,
-    );
-
-    const items: CreatorContentItemDto[] = rows.map((row) => ({
-      youtubeVideoId: row.video.youtubeVideoId,
-      title: row.video.videoTitle ?? null,
-      viewCount: row.video.viewCount ?? 0,
-      likeCount: row.video.likeCount ?? 0,
-      commentCount: row.video.commentCount ?? 0,
-      publishedAt: row.video.publishedAt
-        ? row.video.publishedAt.toISOString()
-        : null,
-      score: {
-        engagementScore: row.score?.engagementScore ?? null,
-        growthScore: row.score?.growthScore ?? null,
-        recommendationScore: row.score?.recommendationScore ?? null,
-        performanceRank: row.score?.performanceRank ?? null,
-      },
-    }));
+    // Merge manual items
+    const mergedItems = [
+      ...items,
+      ...manualItems.map((item) => ({
+        youtubeVideoId: item.externalId || `manual-${item.id}`,
+        title: item.title,
+        viewCount: 0,
+        likeCount: 0,
+        commentCount: 0,
+        publishedAt: item.createdAt ? item.createdAt.toISOString() : null,
+        thumbnailUrl: item.thumbnailUrl,
+        platform: item.platform,
+      })),
+    ]
+      .sort((a, b) => {
+        const da = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+        const db = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+        return db - da;
+      })
+      .slice(0, limit);
 
     const response: CreatorContentInsightDto = {
-      youtubeChannelId: channel.youtubeChannelId,
-      items,
+      youtubeChannelId: channel?.youtubeChannelId ?? null,
+      items: mergedItems as CreatorContentItemDto[],
       limit,
     };
 
     await this.cache.setContent(actor.id, limit, response);
     return response;
+  }
+
+  async createManualContent(
+    actor: RequestUser,
+    body: {
+      platform?: string;
+      title?: string;
+      thumbnailUrl?: string;
+      url?: string;
+      externalId?: string;
+    },
+  ) {
+    const result = await this.repository.createContentItem({
+      userId: actor.id,
+      platform: body.platform || 'manual',
+      title: body.title,
+      thumbnailUrl: body.thumbnailUrl,
+      url: body.url,
+      externalId: body.externalId || `manual-${Date.now()}`,
+      publishedAt: new Date(),
+    });
+
+    await this.cache.invalidateContent(actor.id);
+    return result;
   }
 
   async getPerformanceInsights(
@@ -221,7 +263,7 @@ export class CreatorInsightsService {
       engagementRate,
       topContent,
       timeSeries,
-      summary: null,
+      summary: this.generatePerformanceSummary(monthly, engagementRate),
     };
 
     await this.cache.setPerformance(actor.id, days, limit, response);
@@ -378,5 +420,19 @@ export class CreatorInsightsService {
     }
 
     return totals.engagement / totals.views;
+  }
+
+  private generatePerformanceSummary(
+    monthly: { followerGrowth: number; views: number },
+    engagementRate: number,
+  ): string {
+    const growthText =
+      monthly.followerGrowth >= 0
+        ? `grew by ${monthly.followerGrowth} followers`
+        : `declined by ${Math.abs(monthly.followerGrowth)} followers`;
+
+    const engagementText = (engagementRate * 100).toFixed(1) + '%';
+
+    return `Over the last 30 days, your channel ${growthText} with a total of ${monthly.views.toLocaleString()} views. Your average engagement rate across top content is ${engagementText}.`;
   }
 }

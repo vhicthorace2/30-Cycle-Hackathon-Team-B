@@ -238,4 +238,23 @@ export class AuthController {
       roles: ['admin', 'sme', 'creator'],
     };
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard, AbilitiesGuard)
+  @Roles('admin')
+  @RequireAbilities('audit_logs:read')
+  @Get('admin/audit-logs')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get recent platform audit logs (admin-only)' })
+  async getAuditLogs(@Query('limit') limit?: string) {
+    const parsedLimit = limit ? parseInt(limit, 10) : 50;
+    return this.authService.getAuditLogs(parsedLimit);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/audit-logs')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get current user audit logs' })
+  async getMyAuditLogs(@Req() request: AuthenticatedRequest) {
+    return this.authService.getAuditLogsForUser(request.user.id, 20);
+  }
 }

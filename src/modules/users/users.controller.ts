@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -145,6 +146,30 @@ export class UsersController {
     );
   }
 
+  @Get('admin/stats')
+  @ApiOperation({ summary: 'Get platform-wide statistics (admin only)' })
+  @Roles('admin')
+  @RequireAbilities('users:read:any')
+  async getAdminStats(@Req() request: AuthenticatedRequest) {
+    return this.usersService.getPlatformStats(request.user);
+  }
+
+  @Get('sme/stats')
+  @ApiOperation({ summary: 'Get SME platform statistics' })
+  @Roles('admin', 'sme')
+  @RequireAbilities('sme:creator:discover:any')
+  async getSmeStats(@Req() request: AuthenticatedRequest) {
+    return this.usersService.getSmePlatformStats(request.user);
+  }
+
+  @Get('admin/growth')
+  @ApiOperation({ summary: 'Get platform growth time-series (admin only)' })
+  @Roles('admin')
+  @RequireAbilities('users:read:any')
+  async getAdminGrowth(@Req() request: AuthenticatedRequest) {
+    return this.usersService.getPlatformGrowth(request.user);
+  }
+
   @Get('admin/all')
   @ApiOperation({ summary: 'Get all users across tenants (admin only)' })
   @ApiQuery({
@@ -176,5 +201,29 @@ export class UsersController {
     const parsedOffset = offset ? parseInt(offset, 10) : 0;
 
     return this.usersService.getAllUsersForAdmin(parsedLimit, parsedOffset);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Update user status (active/suspended)' })
+  @Roles('admin')
+  @RequireAbilities('users:update:any')
+  async updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('isActive') isActive: boolean,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<UserDto> {
+    return this.usersService.updateStatus(id, isActive, request.user);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update user details' })
+  @Roles('admin')
+  @RequireAbilities('users:update:any')
+  async updateUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: Partial<UserDto>,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<UserDto> {
+    return this.usersService.updateUser(id, dto, request.user);
   }
 }

@@ -47,6 +47,14 @@ export class UserDto {
   role!: AppRole;
 
   @ApiProperty({
+    description: 'User influence score',
+    example: 85,
+    required: false,
+    nullable: true,
+  })
+  influenceScore?: number | null;
+
+  @ApiProperty({
     description: 'User creation timestamp',
     example: '2024-01-01T00:00:00.000Z',
   })

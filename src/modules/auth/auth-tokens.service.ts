@@ -160,7 +160,7 @@ export class AuthTokensService {
     return (
       this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') ||
       this.configService.get<string>('JWT_EXPIRES_IN') ||
-      '15m'
+      '24h'
     );
   }
 

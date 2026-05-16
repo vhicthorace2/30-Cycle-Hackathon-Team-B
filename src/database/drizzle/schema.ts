@@ -88,6 +88,8 @@ export const users = pgTable(
     isActive: boolean('is_active').notNull().default(true),
     isEmailVerified: boolean('is_email_verified').notNull().default(false),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+    resetToken: text('reset_token'),
+    resetTokenExpires: timestamp('reset_token_expires', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -657,6 +659,53 @@ export const contentConversionsRelations = relations(
 );
 
 /**
+ * Scouted Creators Table
+ * Tracks creators shortlisted by SMEs for campaigns.
+ */
+export const scoutedCreators = pgTable(
+  'scouted_creators',
+  {
+    id: serial('id').primaryKey(),
+    smeId: integer('sme_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    creatorId: integer('creator_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('scouted'), // 'scouted', 'contacted', 'partnered'
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    scoutedSmeIdx: index('scouted_creators_sme_id_idx').on(table.smeId),
+    scoutedCreatorIdx: index('scouted_creators_creator_id_idx').on(
+      table.creatorId,
+    ),
+    scoutedUnique: uniqueIndex('scouted_creators_uq').on(
+      table.smeId,
+      table.creatorId,
+    ),
+  }),
+);
+
+export const scoutedCreatorsRelations = relations(
+  scoutedCreators,
+  ({ one }) => ({
+    sme: one(users, {
+      fields: [scoutedCreators.smeId],
+      references: [users.id],
+      relationName: 'sme_scouts',
+    }),
+    creator: one(users, {
+      fields: [scoutedCreators.creatorId],
+      references: [users.id],
+      relationName: 'creator_scouted',
+    }),
+  }),
+);
+
+/**
  * Type Exports
  */
 export type User = typeof users.$inferSelect;
@@ -686,4 +735,6 @@ export type ContentMetric = typeof contentMetrics.$inferSelect;
 export type NewContentMetric = typeof contentMetrics.$inferInsert;
 export type ContentConversion = typeof contentConversions.$inferSelect;
 export type NewContentConversion = typeof contentConversions.$inferInsert;
+export type ScoutedCreator = typeof scoutedCreators.$inferSelect;
+export type NewScoutedCreator = typeof scoutedCreators.$inferInsert;
 export type UserRole = (typeof userRoleEnum.enumValues)[number];

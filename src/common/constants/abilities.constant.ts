@@ -6,6 +6,8 @@ export const ABILITY_VALUES = [
   'users:read:self',
   'users:list:any',
   'users:list:tenant',
+  'users:update:any',
+  'users:update:tenant',
   'auth:manage:any',
   'tenant:manage:self',
   'socials:youtube:read:any',
@@ -16,8 +18,11 @@ export const ABILITY_VALUES = [
   'socials:oauth:refresh:self',
   'creator:insights:read:any',
   'creator:insights:read:self',
+  'creator:insights:write:any',
+  'creator:insights:write:self',
   'sme:creator:discover:any',
   'sme:creator:compare:any',
+  'audit_logs:read',
 ] as const;
 
 export type AppAbility = (typeof ABILITY_VALUES)[number];
@@ -31,8 +36,11 @@ export const ROLE_ABILITIES: Record<AppRole, AppAbility[]> = {
     'socials:youtube:write:any',
     'socials:oauth:refresh:any',
     'creator:insights:read:any',
+    'creator:insights:write:any',
     'sme:creator:discover:any',
     'sme:creator:compare:any',
+    'users:update:any',
+    'audit_logs:read',
   ],
   sme: [
     'users:read:tenant',
@@ -51,6 +59,7 @@ export const ROLE_ABILITIES: Record<AppRole, AppAbility[]> = {
     'socials:youtube:write:self',
     'socials:oauth:refresh:self',
     'creator:insights:read:self',
+    'creator:insights:write:self',
   ],
   user: [],
 };

@@ -13,11 +13,13 @@ import {
   InvalidTokenException,
   MissingFieldException,
 } from '@common/exceptions';
+import { randomBytes } from 'node:crypto';
 import { UsersRepository } from '@modules/users/users.repository';
 import { SessionsService } from '@modules/sessions/sessions.service';
 import { AuthRepository } from './auth.repository';
 import { AuthGoogleOauthService } from './auth-google-oauth.service';
 import { AuthTokensService } from './auth-tokens.service';
+import { UsersCacheService } from '@modules/users/users-cache.service';
 import type { AuthResponseDto } from './dto/auth-response.dto';
 import type { AdminSignupDto } from './dto/admin-signup.dto';
 import type { GoogleAuthDto } from './dto/google-auth.dto';
@@ -43,6 +45,7 @@ export class AuthService {
     private readonly tokensService: AuthTokensService,
     private readonly googleOauthService: AuthGoogleOauthService,
     private readonly configService: ConfigService,
+    private readonly usersCache: UsersCacheService,
   ) {}
 
   async signup(dto: SignupDto, request: Request): Promise<AuthResponseDto> {
@@ -450,12 +453,70 @@ export class AuthService {
     return nextTokenPair;
   }
 
+  async requestPasswordReset(email: string): Promise<{ success: boolean }> {
+    const user = await this.usersRepository.findByEmail(email.toLowerCase());
+    if (!user) {
+      // Return success even if user doesn't exist to prevent email enumeration
+      return { success: true };
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    await this.usersRepository.update(user.id, {
+      resetToken: token,
+      resetTokenExpires: expires,
+    });
+
+    this.logger.log(`Password reset token generated for ${email}: ${token}`);
+    // In production, send email here.
+
+    return { success: true };
+  }
+
+  async resetPassword(
+    token: string,
+    passwordHash: string,
+  ): Promise<{ success: boolean }> {
+    const user = await this.usersRepository.findByResetToken(token);
+    if (
+      !user ||
+      !user.resetTokenExpires ||
+      user.resetTokenExpires < new Date()
+    ) {
+      throw new InvalidTokenException({
+        reason: 'invalid-or-expired-reset-token',
+      });
+    }
+
+    const newPasswordHash = await hash(passwordHash, this.getBcryptRounds());
+
+    await this.usersRepository.update(user.id, {
+      passwordHash: newPasswordHash,
+      resetToken: null,
+      resetTokenExpires: null,
+    });
+
+    return { success: true };
+  }
+
+  async getAuditLogs(limit = 50) {
+    return this.authRepository.findAllAuditLogs(limit);
+  }
+
+  async getAuditLogsForUser(userId: number, limit = 20) {
+    return this.authRepository.findAuditLogsByUserId(userId, limit);
+  }
+
   async logout(
     userId: number,
     sessionId: string,
     request: Request,
   ): Promise<{ success: boolean }> {
-    await this.sessionsService.revokeSessionById(sessionId);
+    await Promise.all([
+      this.sessionsService.revokeSessionById(sessionId),
+      this.usersCache.deleteMe(userId),
+    ]);
 
     await this.writeAuditLog({
       userId,

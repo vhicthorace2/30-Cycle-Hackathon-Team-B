@@ -8,11 +8,27 @@ import {
   youtubeDailyAnalytics,
   youtubeVideos,
   youtubeMlScores,
+  contentItems,
 } from '@database/drizzle/schema';
+import type { NewContentItem } from '@database/drizzle/schema';
 
 @Injectable()
 export class CreatorInsightsRepository {
   constructor(@Inject(DATABASE_PROVIDER) private readonly db: Database) {}
+
+  async createContentItem(data: NewContentItem) {
+    const result = await this.db.insert(contentItems).values(data).returning();
+    return result[0];
+  }
+
+  async getContentItemsForUser(userId: number, limit: number) {
+    return this.db
+      .select()
+      .from(contentItems)
+      .where(eq(contentItems.userId, userId))
+      .orderBy(desc(contentItems.createdAt))
+      .limit(limit);
+  }
 
   async getUserProfile(userId: number) {
     const result = await this.db

@@ -1,4 +1,12 @@
-import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -95,6 +103,25 @@ export class CreatorInsightsController {
   ) {
     const limit = query.limit ?? 10;
     return this.insightsService.getContentInsights(request.user, limit);
+  }
+
+  @Post('content')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create manual content item for library' })
+  @Roles('admin', 'creator')
+  @RequireAbilities('creator:insights:write:any', 'creator:insights:write:self')
+  async createContentItem(
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: {
+      platform?: string;
+      title?: string;
+      thumbnailUrl?: string;
+      url?: string;
+      externalId?: string;
+    },
+  ) {
+    return this.insightsService.createManualContent(request.user, body);
   }
 
   @Get('performance')

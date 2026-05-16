@@ -16,6 +16,7 @@ import { YoutubeRepository } from '../repository/youtube.repository';
 import { YoutubeCacheService } from './youtube-cache.service';
 import { QueueService } from '@modules/queue/queue.service';
 import { HealthService } from '@modules/health/health.service';
+import { CreatorInsightsCacheService } from '@modules/creator-insights/creator-insights-cache.service';
 import type { ApproveYoutubeChannelDto } from '../dto/approve-youtube-channel.dto';
 import { ContentRepository } from '../repository/content.repository';
 import type {
@@ -122,6 +123,7 @@ export class YoutubeIngestionService {
     private readonly repository: YoutubeRepository,
     private readonly contentRepository: ContentRepository,
     private readonly cache: YoutubeCacheService,
+    private readonly insightsCache: CreatorInsightsCacheService,
     private readonly queueService: QueueService,
     private readonly healthService: HealthService,
   ) {}
@@ -294,6 +296,23 @@ export class YoutubeIngestionService {
       );
 
       const cacheStatus = await this.cachePersistedData(actor.id, persisted);
+
+      // 5. INVALIDATE: Force creator insights to refresh from DB on next read
+      try {
+        await Promise.all([
+          this.insightsCache.invalidateAudience(actor.id),
+          this.insightsCache.invalidatePerformance(actor.id),
+          this.insightsCache.invalidateContent(actor.id),
+        ]);
+        this.logger.log(
+          `[Sync ${actor.id}] Invalidated creator insights cache`,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `[Sync ${actor.id}] Failed to invalidate creator insights cache: ${error.message}`,
+        );
+      }
+
       const { jobId, jobStatus } = await this.enqueueIngestionJobs(
         actor,
         query,
