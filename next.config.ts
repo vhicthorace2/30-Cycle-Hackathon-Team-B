@@ -1,49 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'export',
   images: {
+    unoptimized: true,
     qualities: [30, 42, 75],
   },
-  redirects: async () => {
-    return [
-      {
-        source: '/insights',
-        destination: '/dashboard',
-        permanent: true,
-      },
-      {
-        source: '/performance',
-        destination: '/dashboard',
-        permanent: true,
-      },
-      {
-        source: '/sessions',
-        destination: '/dashboard',
-        permanent: true,
-      },
-      {
-        source: '/settings',
-        destination: '/dashboard?tab=settings',
-        permanent: true,
-      },
-      {
-        source: '/discovery',
-        destination: '/dashboard?tab=market',
-        permanent: true,
-      },
-    ];
-  },
-  rewrites: async () => {
-    return {
-      beforeFiles: [
-        // Proxy API requests to backend
-        {
-          source: '/api-proxy/:path*',
-          destination: 'http://localhost:3000/:path*',
-        },
-      ],
-    };
-  },
+  /* 
+     Note: redirects and rewrites are server-side features and are disabled for static export.
+     Ensure your API calls in lib/api point to a full production URL.
+  */
 };
 
 export default nextConfig;

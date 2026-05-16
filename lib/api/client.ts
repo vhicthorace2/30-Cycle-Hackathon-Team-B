@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { useAuthStore } from '../auth/store';
 
+const isDev = process.env.NODE_ENV === 'development';
+const standbyUrl = 'https://ciap-proxy.onrender.com';
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || (isDev ? 'http://localhost:3000' : standbyUrl),
   withCredentials: true,
 });
 
@@ -51,7 +54,8 @@ api.interceptors.response.use(
         const { refreshToken } = useAuthStore.getState();
         if (!refreshToken) throw new Error('No refresh token available');
         
-        const refreshUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3000'}/auth/refresh`;
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || (isDev ? 'http://localhost:3000' : standbyUrl);
+        const refreshUrl = `${apiBaseUrl.replace(/\/$/, '')}/auth/refresh`;
         const { data } = await axios.post(refreshUrl, { refreshToken }, { withCredentials: true });
         const newToken = data.accessToken;
         const newRefreshToken = data.refreshToken;
