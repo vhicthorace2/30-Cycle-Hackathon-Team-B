@@ -108,6 +108,7 @@ export interface AdminUserSummary {
   tenantId: string;
   isEmailVerified: boolean;
   role: string;
+  influenceScore?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -272,11 +273,68 @@ export const useUserPlatformStatus = (userId?: string, enabled: boolean = true) 
   });
 };
 
+export const useAdminCreateUser = () => {
+  return useMutation({
+    mutationFn: async (data: { name: string; email: string; role: string; password?: string }) => {
+      const response = await api.post('/auth/signup', data);
+      return response.data;
+    }
+  });
+};
+
+export const useAdminUpdateUser = () => {
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: Partial<AdminUserSummary> }) => {
+      const response = await api.patch(`/users/${userId}`, data);
+      return response.data;
+    }
+  });
+};
+
 export const useAdminUsers = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ['users', 'admin', 'all'],
     queryFn: async () => {
       const response = await api.get<AdminUserSummary[]>('/users/admin/all');
+      return response.data;
+    },
+    enabled,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useAdminStats = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['users', 'admin', 'stats'],
+    queryFn: async () => {
+      const response = await api.get('/users/admin/stats');
+      return response.data;
+    },
+    enabled,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useSmeStats = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['users', 'sme', 'stats'],
+    queryFn: async () => {
+      const response = await api.get('/users/sme/stats');
+      return response.data;
+    },
+    enabled,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useAdminGrowth = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['users', 'admin', 'growth'],
+    queryFn: async () => {
+      const response = await api.get('/users/admin/growth');
       return response.data;
     },
     enabled,
@@ -295,6 +353,26 @@ export const useRoles = (enabled: boolean = true) => {
     enabled,
     retry: 1,
     refetchOnWindowFocus: false,
+  });
+};
+
+export const useAuditLogs = (limit = 50) => {
+  return useQuery({
+    queryKey: ['audit-logs', limit],
+    queryFn: async () => {
+      const response = await api.get(`/auth/admin/audit-logs?limit=${limit}`);
+      return response.data;
+    }
+  });
+};
+
+export const useMyAuditLogs = (limit = 20) => {
+  return useQuery({
+    queryKey: ['my-audit-logs', limit],
+    queryFn: async () => {
+      const response = await api.get(`/auth/me/audit-logs?limit=${limit}`);
+      return response.data;
+    }
   });
 };
 
@@ -483,6 +561,7 @@ export interface CreatorProfile {
     avatarUrl?: string;
     audienceSize: number;
     influenceScore?: number;
+    contactEmail?: string;
   };
   channel?: {
     youtubeChannelId: string;
@@ -498,6 +577,13 @@ export interface CreatorProfile {
     topKeywords: string[];
     summary?: string;
   };
+  library: Array<{
+    id: number;
+    platform: string;
+    title: string | null;
+    thumbnailUrl: string | null;
+    url: string | null;
+  }>;
 }
 
 export const useCreatorProfile = (userId: string, enabled: boolean = true) => {
@@ -509,5 +595,64 @@ export const useCreatorProfile = (userId: string, enabled: boolean = true) => {
     },
     enabled: Boolean(enabled && userId),
     retry: 1,
+  });
+};
+
+export const useScoutCreator = () => {
+  return useMutation({
+    mutationFn: async (creatorId: string) => {
+      const response = await api.post(`/sme/creators/${creatorId}/scout`);
+      return response.data;
+    }
+  });
+};
+
+export const useUnscoutCreator = () => {
+  return useMutation({
+    mutationFn: async (creatorId: string) => {
+      const response = await api.delete(`/sme/creators/${creatorId}/scout`);
+      return response.data;
+    }
+  });
+};
+
+export const useScoutedCreators = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['scoutedCreators'],
+    queryFn: async () => {
+      const response = await api.get<{ creators: any[] }>('/sme/creators/scouted');
+      return response.data.creators;
+    },
+    enabled,
+    retry: 1,
+  });
+};
+
+export interface ContentItem {
+  id?: number;
+  youtubeVideoId: string;
+  platform: string;
+  title?: string;
+  thumbnailUrl?: string;
+  url?: string;
+  publishedAt?: string;
+}
+
+export const useContentItems = () => {
+  return useQuery({
+    queryKey: ['contentItems'],
+    queryFn: async () => {
+      const response = await api.get<{ items: ContentItem[] }>('/creators/insights/content');
+      return response.data.items;
+    },
+  });
+};
+
+export const useCreateContentItem = () => {
+  return useMutation({
+    mutationFn: async (data: Partial<ContentItem>) => {
+      const response = await api.post('/creators/insights/content', data);
+      return response.data;
+    },
   });
 };

@@ -96,7 +96,7 @@ export default function Login() {
               }}
             >
               
-              <div className="space-y-4 mb-6">
+              <div className="space-y-4 mb-2">
                 <div>
                   <label className="block text-sm font-semibold text-[#0B1C30] mb-2">Email</label>
                   <input 
@@ -109,8 +109,10 @@ export default function Login() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#0B1C30] mb-2">Password</label>
-                  <div className="relative">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-semibold text-[#0B1C30]">Password</label>
+                    <Link href="/forgot-password" className="text-xs font-bold text-[#6B61F0] hover:underline">Forgot password?</Link>
+                  </div>    <div className="relative">
                     <input 
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
@@ -153,7 +155,11 @@ export default function Login() {
                         <div className="flex-1 h-px bg-[#E5E7EB]" />
                      </div>
 
-                     <button type="button" className="w-full py-3 rounded-lg border border-[#E5E7EB] bg-white text-[#0B1C30] text-sm font-bold flex items-center justify-center gap-2 transition-all hover:bg-[#F8F9FF] active:scale-[0.98]">
+                     <button 
+                       type="button" 
+                       onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/auth/google`}
+                       className="w-full py-3 rounded-lg border border-[#E5E7EB] bg-white text-[#0B1C30] text-sm font-bold flex items-center justify-center gap-2 transition-all hover:bg-[#F8F9FF] active:scale-[0.98]"
+                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path fillRule="evenodd" clipRule="evenodd" d="M23.52 12.27c0-.85-.08-1.67-.21-2.47H12v4.67h6.46a5.53 5.53 0 01-2.4 3.63v3.02h3.89c2.28-2.1 3.57-5.2 3.57-8.85z" fill="#4285F4"/><path fillRule="evenodd" clipRule="evenodd" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3.02c-1.08.73-2.46 1.16-4.06 1.16-3.13 0-5.78-2.11-6.73-4.96H1.26v3.1A11.96 11.96 0 0012 24z" fill="#34A853"/><path fillRule="evenodd" clipRule="evenodd" d="M5.27 14.27a7.22 7.22 0 010-4.54V6.63H1.26A11.97 11.97 0 000 12c0 1.92.45 3.73 1.26 5.37l4.01-3.1z" fill="#FBBC05"/><path fillRule="evenodd" clipRule="evenodd" d="M12 4.77c1.76 0 3.34.6 4.59 1.8l3.43-3.44C17.96 1.21 15.24 0 12 0 7.42 0 3.33 2.6 1.26 6.63l4.01 3.1c.95-2.85 3.6-4.96 6.73-4.96z" fill="#EA4335"/></svg>
                         Continue with Google
                      </button>

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-import { MagnifyingGlass, Star, Users, TrendingUp } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, Users, TrendUp } from '@phosphor-icons/react';
 
 interface Creator {
   id: string;
@@ -101,24 +101,10 @@ const growthTrendData = [
   { name: 'Week 4', avgFollowers: 1800000 }
 ];
 
-const MetricCard = ({ label, value, trend, trendUp }: CreatorMetrics) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.4 }}
-    className="bg-white rounded-xl border border-[#E5E7EB] p-6 shadow-sm hover:shadow-md transition"
-  >
-    <div className="space-y-3 flex-1">
-      <p className="text-sm font-medium text-[#6B7280]">{label}</p>
-      <h3 className="text-2xl font-black text-[#0B1C30]">{value}</h3>
-      <p className={`text-sm font-bold ${trendUp ? 'text-[#006D32]' : 'text-[#DC2626]'}`}>
-        {trendUp ? '↑' : '↓'} {trend}
-      </p>
-    </div>
-  </motion.div>
-);
-
 export default function SMEDashboard() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -127,37 +113,47 @@ export default function SMEDashboard() {
     creator.platform.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (!mounted) return <div className="h-screen bg-[#F8F9FF]" />;
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <div className="space-y-6">
+    <div className="w-full mx-auto space-y-6 pb-10 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-3xl font-black text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>
-            Creator Scouting Dashboard
+          <h1 className="text-[22px] font-bold text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>
+            Resource Discovery Intelligence
           </h1>
-          <p className="text-sm text-[#6B7280] mt-2" style={{ fontFamily: "'Inter'" }}>
-            Discovery and evaluation of high-potential creators across platforms.
+          <p className="text-[12px] text-[#3C4A3D]/70 font-medium mt-0.5">
+            Real-time influencer scouting and audience alignment metrics.
           </p>
         </div>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <MagnifyingGlass size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" />
-          <input
-            type="text"
-            placeholder="Search creators by name or platform..."
+        <div className="relative w-full sm:w-[240px]">
+          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" size={16} />
+          <input 
+            type="text" 
+            placeholder="Search creators..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-[#E5E7EB] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006D32]"
-            style={{ fontFamily: "'Inter'" }}
+            className="w-full pl-9 pr-4 h-9 bg-white border border-[#E5E7EB] rounded-lg text-[12px] focus:outline-none focus:ring-2 focus:ring-[#006D32]/20"
           />
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {creatorMetrics.map((metric) => (
-          <MetricCard key={metric.label} {...metric} />
+      <div className="grid grid-cols-2 gap-3 lg:gap-4">
+        {creatorMetrics.map((metric, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-white p-4 rounded-xl border border-[#F1F5F9] shadow-sm"
+          >
+            <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">{metric.label}</p>
+            <h3 className="text-[22px] font-bold text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>{metric.value}</h3>
+            <p className={`text-[11px] font-bold mt-1 ${metric.trendUp ? 'text-[#006D32]' : 'text-red-500'}`}>
+              {metric.trend}
+            </p>
+          </motion.div>
         ))}
       </div>
 

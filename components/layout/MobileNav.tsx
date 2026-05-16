@@ -1,54 +1,52 @@
 'use client';
+
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
-  Layout, ChartBar, Briefcase, User, Gear, Users, IdentificationCard, ChatCircleText
+  House, ChartLineUp, UsersThree, BookOpen, GearSix, MagnifyingGlass, Briefcase, ChartBar, Bell, SquaresFour, UserList, Faders, ShieldCheck
 } from '@phosphor-icons/react';
 import { useAuthStore } from '@/lib/auth/store';
 import { useMeProfile } from '@/lib/api/hooks';
 import { useMemo } from 'react';
 
-const navItems = [
-  { id: 'dashboard', label: 'Studio', icon: Layout, roles: ['creator', 'sme', 'agency', 'admin'] },
-  { id: 'analytics', label: 'Metrics', icon: ChartBar, roles: ['creator', 'sme', 'agency', 'admin'] },
-  { id: 'market', label: 'Find', icon: Briefcase, roles: ['sme', 'agency', 'admin'] },
-  { id: 'profile', label: 'Profile', icon: User, roles: ['creator', 'sme', 'agency', 'admin'] },
-  { id: 'settings', label: 'Settings', icon: Gear, roles: ['creator', 'sme', 'agency', 'admin'] },
-  { id: 'chat', label: 'Chat', icon: ChatCircleText, roles: ['creator', 'sme', 'agency', 'admin'] },
-];
+// Navigation items organized by role to match the sidebar
+const NAV_GROUPS = {
+  creator: [
+    { id: 'Dashboard', label: 'Home', icon: House },
+    { id: 'Content', label: 'Pulse', icon: ChartLineUp },
+    { id: 'Audience', label: 'Growth', icon: UsersThree },
+    { id: 'Settings', label: 'Gear', icon: GearSix },
+  ],
+  sme: [
+    { id: 'Dashboard', label: 'Explore', icon: MagnifyingGlass },
+    { id: 'Insights', label: 'Stats', icon: ChartBar },
+    { id: 'Campaigns', label: 'Brief', icon: Briefcase },
+    { id: 'Settings', label: 'Gear', icon: GearSix },
+  ],
+  admin: [
+    { id: 'Dashboard', label: 'Core', icon: SquaresFour },
+    { id: 'Users', label: 'Users', icon: UserList },
+    { id: 'Analytics', label: 'Logs', icon: Faders },
+    { id: 'Settings', label: 'Gear', icon: GearSix },
+  ]
+};
 
 export default function MobileNav() {
   const { user } = useAuthStore();
-  const { data } = useMeProfile();
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const activeTab = searchParams.get('tab') || 'dashboard';
-
-  const role = data?.role || user?.role || 'creator';
-  const isAdmin = role === 'admin';
-
-  const filteredNavItems = useMemo(() => {
-    return navItems.map(item => {
-      if (isAdmin) {
-        if (item.id === 'dashboard') return { ...item, label: 'Manage', icon: Users };
-        if (item.id === 'analytics') return { ...item, label: 'Audit', icon: IdentificationCard };
-        if (item.id === 'market') return null;
-      }
-      return item;
-    }).filter(Boolean);
-  }, [isAdmin]);
+  const searchParams = useSearchParams();
+  const role = (user?.role as keyof typeof NAV_GROUPS) || 'creator';
+  
+  const activeTab = searchParams.get('tab') || 'Dashboard';
+  const navItems = NAV_GROUPS[role] || NAV_GROUPS.creator;
 
   const setActiveTab = (tab: string) => {
     router.push(`/dashboard?tab=${tab}`, { scroll: false });
   };
 
   return (
-    <div className="md:hidden fixed bottom-6 left-6 right-6 z-[100]">
-      <nav className="bg-white border-2 border-black rounded-[2.5rem] h-20 flex items-center justify-around px-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-        {filteredNavItems.map((item) => {
-          if (!item) return null;
-          const isAllowed = item.roles.includes(role);
-          if (!isAllowed) return null;
-
+    <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md">
+      <nav className="bg-[#0B1C30]/90 backdrop-blur-2xl rounded-[24px] h-[72px] flex items-center justify-around px-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-white/10">
+        {navItems.map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
 
@@ -56,10 +54,17 @@ export default function MobileNav() {
             <button 
               key={item.id} 
               onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center justify-center gap-1.5 flex-1 h-full transition-all active:scale-95 ${isActive ? 'text-black' : 'text-zinc-300'}`}
+              className="relative flex flex-col items-center justify-center gap-1.5 flex-1 h-full transition-all active:scale-90"
             >
-              <Icon size={24} weight={isActive ? "fill" : "bold"} className="transition-transform" />
-              <span className="text-[8px] font-black uppercase tracking-widest leading-none">{item.label}</span>
+              <div className={`transition-all duration-300 ${isActive ? 'text-[#00D166] scale-110' : 'text-white/40'}`}>
+                <Icon size={24} weight={isActive ? "fill" : "bold"} />
+              </div>
+              <span className={`text-[9px] font-bold uppercase tracking-[1px] transition-all duration-300 ${isActive ? 'text-white' : 'text-white/20'}`}>
+                {item.label}
+              </span>
+              {isActive && (
+                <div className="absolute -bottom-1 w-1 h-1 bg-[#00D166] rounded-full shadow-[0_0_8px_#00D166]" />
+              )}
             </button>
           );
         })}

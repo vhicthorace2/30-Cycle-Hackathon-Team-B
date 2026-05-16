@@ -3,17 +3,21 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth/store';
+import { useMeProfile } from '@/lib/api/hooks';
 import { CheckCircle } from '@phosphor-icons/react';
 
 export default function WelcomePage() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { data: profile } = useMeProfile();
   const [isVisible, setIsVisible] = useState(true);
+
+  const displayName = profile?.profile?.displayName || profile?.profile?.name || user?.name || 'there';
 
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/dashboard');
-    }, 4500);
+    }, 3500);
 
     return () => clearTimeout(timer);
   }, [router]);
@@ -43,7 +47,7 @@ export default function WelcomePage() {
           letterSpacing: '-1.8px',
         }}
       >
-        Welcome, {user?.name?.split(' ')[0] || 'to Omniview'}!
+        Welcome, {displayName}!
       </motion.h1>
 
       {/* Success Message */}
@@ -54,7 +58,7 @@ export default function WelcomePage() {
         className="text-lg sm:text-xl text-[#6B7280] max-w-md text-center mb-12"
         style={{ fontFamily: "'Inter'" }}
       >
-        Your account has been created successfully. Redirecting to your dashboard...
+        Your account has been verified. Redirecting you to the dashboard...
       </motion.p>
 
       {/* Loading Dots */}

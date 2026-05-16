@@ -69,7 +69,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <motion.button
                 whileHover={{ scale: 1.02 }}
-                onClick={() => router.push('/onboarding')}
+                onClick={() => router.push('/signup')}
                 className="px-6 py-3 bg-[#006D32] text-white font-bold rounded-lg hover:bg-[#005227] transition"
                 style={{ fontFamily: "\"Space Grotesk\"" }}
               >
@@ -175,7 +175,7 @@ export default function LandingPage() {
                 alt="Real-time Analytics Dashboard"
                 width={800}
                 height={224}
-                className="w-full h-56 object-cover rounded-xl"
+                className="w-full h-auto object-cover rounded-xl"
               />
             </motion.div>
 
