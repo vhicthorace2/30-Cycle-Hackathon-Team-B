@@ -1,3 +1,0 @@
-allowBuilds:
-  '@nestjs/core': false
-  '@swc/core': false
