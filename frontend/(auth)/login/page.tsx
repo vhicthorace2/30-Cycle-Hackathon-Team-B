@@ -65,7 +65,7 @@ export default function Login() {
                   const endpoint = isAdminLogin ? '/auth/admin/login' : '/auth/login';
                   const { data } = await api.post(endpoint, { email, password }, { withCredentials: true });
                   // rely on backend-set httpOnly cookies for persistence
-                  useAuthStore.getState().setAuth(data.user, data.accessToken, data.refreshToken);
+                  useAuthStore.getState().setAuth(data.user);
                   toast.success(`Welcome back, ${data.user.name}!`);
                   
                   // Use router.replace now that ProtectedRoute handles hydration correctly

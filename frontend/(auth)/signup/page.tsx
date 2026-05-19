@@ -266,7 +266,7 @@ export default function Signup() {
         { withCredentials: true }
       );
 
-      useAuthStore.getState().setAuth(data.user, data.accessToken, data.refreshToken);
+      useAuthStore.getState().setAuth(data.user);
       toast.success(`Welcome to Omniview, ${data.user.name}!`);
       router.replace('/auth/welcome');
     } catch (err: any) {

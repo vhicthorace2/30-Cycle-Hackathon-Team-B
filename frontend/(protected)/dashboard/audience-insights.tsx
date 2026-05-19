@@ -346,7 +346,7 @@ export default function AudienceInsights() {
                     <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => fmt(v)} />
                     <Tooltip
                       contentStyle={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: '10px', fontSize: '12px' }}
-                      formatter={(v: any, name: string) => [fmt(v), name === 'subscribers' ? 'Subscribers' : 'Views']}
+                      formatter={(value, name) => [fmt(Number(value)), name === 'subscribers' ? 'Subscribers' : 'Views']}
                     />
                     <Area type="monotone" dataKey="subscribers" stroke="#00D166" strokeWidth={2.5} fill="url(#growthGrad)" dot={false} activeDot={{ r: 4, fill: '#00D166' }} />
                   </AreaChart>

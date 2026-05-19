@@ -76,7 +76,7 @@ export default function UsersPage() {
               <div className="rounded-4xl border-2 border-black bg-[#F9F9F9] p-6 font-bold text-[#666]">Loading users from /users/admin/all...</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {adminUsers.data?.users?.map((account) => (
+                {adminUsers.data?.map((account) => (
                   <div key={account.id} className="rounded-4xl border-2 border-black bg-white p-5 hover:bg-[#F9F9F9] transition-all">
                     <p className="text-lg font-black text-[#111]">{account.name}</p>
                     <p className="text-sm font-bold text-[#666]">{account.email}</p>

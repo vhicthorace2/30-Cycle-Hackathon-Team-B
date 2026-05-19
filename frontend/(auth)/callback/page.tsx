@@ -14,41 +14,48 @@ export default function Callback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const searchParams = new URLSearchParams(window.location.search);
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-
-      if (!code) {
-        router.push('/login');
-        return;
-      }
-
       try {
-        // Try to determine if this was a YouTube connection or a Login
-        // We do this by checking if we have an active session already
-        const { accessToken } = useAuthStore.getState();
-        
-        let endpoint = '/auth/socials/google/login/callback';
-        
-        if (accessToken) {
-          // If we already have a token, we are likely connecting a social account
-          endpoint = '/ingestion/youtube/oauth2/callback';
-        }
+        // Backend handles Google's redirect and sets httpOnly cookies, then redirects here.
+        // First try to verify session; if verify succeeds but doesn't return full user, fetch /users/me.
+        const verifyResp = await api.get('/auth/verify', { withCredentials: true }).catch(() => null);
 
-        const { data } = await api.get(`${endpoint}${window.location.search}`, { 
-          withCredentials: true,
-          headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}
-        });
+        let user = null;
 
-        if (data.user) {
-          setAuth(data.user, data.accessToken, data.refreshToken);
-          router.replace(getPostLoginRoute(data.user.role));
+        if (verifyResp?.data) {
+          if (verifyResp.data.user) {
+            user = verifyResp.data.user;
+          } else if (verifyResp.data.valid) {
+            const meResp = await api.get('/users/me', { withCredentials: true });
+            const d = meResp.data;
+            user = {
+              id: d.profile?.id,
+              name: d.profile?.name,
+              email: d.profile?.email,
+              role: d.role,
+              tenantId: d.profile?.tenantId,
+            };
+          }
         } else {
-          // YouTube connection successful, go back to dashboard
-          await queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
-          toast.success('YouTube connected successfully!');
-          router.replace('/dashboard');
+          const meResp = await api.get('/users/me', { withCredentials: true });
+          const d = meResp.data;
+          user = {
+            id: d.profile?.id,
+            name: d.profile?.name,
+            email: d.profile?.email,
+            role: d.role,
+            tenantId: d.profile?.tenantId,
+          };
         }
+
+        if (user) {
+          setAuth(user);
+          router.replace(getPostLoginRoute(user.role));
+          return;
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
+        toast.success('You are connected.');
+        router.replace('/dashboard');
       } catch (err) {
         console.error('OAuth Callback Error:', err);
         await queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
@@ -57,7 +64,7 @@ export default function Callback() {
       }
     };
     handleCallback();
-  }, [router, setAuth]);
+  }, [router, setAuth, queryClient]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

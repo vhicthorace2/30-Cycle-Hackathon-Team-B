@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import { useAuthStore } from '../auth/store';
 
 // Use Next rewrite proxy in dev so cookies are same-origin and httpOnly cookies are sent/received correctly.
@@ -11,7 +11,11 @@ const api = axios.create({
 // auth is based on httpOnly cookies set by the backend.
 api.interceptors.request.use((config) => {
   const { currentTenant } = useAuthStore.getState();
-  if (currentTenant) config.headers = { ...(config.headers || {}), 'X-Tenant-ID': currentTenant.id };
+  if (currentTenant) {
+    const headers = AxiosHeaders.from(config.headers);
+    headers.set('X-Tenant-ID', currentTenant.id);
+    config.headers = headers;
+  }
   return config;
 });
 
