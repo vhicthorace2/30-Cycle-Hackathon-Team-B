@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export default function middleware(request: NextRequest) {
+export default function examiddleware(request: NextRequest) {
   const token = request.cookies.get('ciap_access')?.value;
   const { pathname } = request.nextUrl;
 
@@ -20,8 +20,8 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next({ request: { headers } });
   }
 
-  // Allow landing and auth pages without tokens
-  if (!token && !isAuthPage && !isCallbackPage && !isLandingPage) {
+  // Allow landing/auth pages and API proxy requests without tokens
+  if (!token && !isAuthPage && !isCallbackPage && !isLandingPage && !isApiProxy) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
