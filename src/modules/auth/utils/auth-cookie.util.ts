@@ -13,7 +13,13 @@ export function setAuthTokenCookies(
   authResponse: AuthTokenResponseDto,
 ): void {
   const secure = process.env.NODE_ENV === 'production';
-  const sameSite = secure ? 'none' : 'lax';
+  const sameSiteEnv = process.env.AUTH_COOKIE_SAMESITE?.toLowerCase();
+  const sameSite =
+    sameSiteEnv === 'none' || sameSiteEnv === 'lax' || sameSiteEnv === 'strict'
+      ? sameSiteEnv
+      : secure
+        ? 'none'
+        : 'lax';
 
   response.cookie(ACCESS_COOKIE_NAME, authResponse.accessToken, {
     httpOnly: true,

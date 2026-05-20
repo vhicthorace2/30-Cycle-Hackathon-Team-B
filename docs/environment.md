@@ -43,6 +43,7 @@ Updated for the current runtime config on 2026-04-08.
 - `BCRYPT_ROUNDS` (default `10`)
 - `JWT_ACCESS_EXPIRES_IN` (default `15m`)
 - `JWT_REFRESH_EXPIRES_IN` (default `7d`)
+- `AUTH_COOKIE_SAMESITE` (`none`, `lax`, or `strict`; defaults to `none` in production and `lax` otherwise)
 - `FRONTEND_OAUTH_REDIRECT_URI` (optional; supports comma-separated URLs and selects the entry matching the request origin, falling back to the first value)
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_LOGIN_REDIRECT_URI` (default fallback: `http://localhost:3000/auth/socials/google/login/callback`)
