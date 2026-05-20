@@ -1,9 +1,11 @@
 import axios, { AxiosHeaders } from 'axios';
 import { useAuthStore } from '../auth/store';
 
-// Use Next rewrite proxy in dev so cookies are same-origin and httpOnly cookies are sent/received correctly.
+// Call the backend directly so OAuth cookies are scoped to the backend domain.
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
 const api = axios.create({
-  baseURL: '/api-proxy',
+  baseURL: apiBaseUrl,
   withCredentials: true,
 });
 
@@ -47,7 +49,7 @@ api.interceptors.response.use(
 
       try {
         // Ask backend to rotate refresh token (backend will read ciap_refresh cookie)
-        await axios.post('/api-proxy/auth/refresh', {}, { withCredentials: true });
+        await axios.post(`${apiBaseUrl}/auth/refresh`, {}, { withCredentials: true });
 
         // Obtain current user/session info
         const verifyResp = await api.get('/auth/verify', { withCredentials: true });
