@@ -1,7 +1,7 @@
 import axios, { AxiosHeaders } from 'axios';
 import { useAuthStore } from '../auth/store';
 
-// Use Next rewrite proxy in dev so cookies are same-origin and httpOnly cookies are sent/received correctly.
+// Use the Next rewrite proxy so cookies are first-party on the frontend domain.
 const api = axios.create({
   baseURL: '/api-proxy',
   withCredentials: true,

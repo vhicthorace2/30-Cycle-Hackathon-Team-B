@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export default function middleware(request: NextRequest) {
+export default function examiddleware(request: NextRequest) {
   const token = request.cookies.get('ciap_access')?.value;
   const { pathname } = request.nextUrl;
 
@@ -11,22 +11,25 @@ export default function middleware(request: NextRequest) {
   const isCallbackPage = pathname.startsWith('/callback');
   const isLandingPage = pathname === '/';
   
-  // Inject bearer token for backend auth on API proxy calls.
-  if (isApiProxy && token) {
-    const headers = new Headers(request.headers);
-    if (!headers.get('authorization')) {
-      headers.set('authorization', `Bearer ${token}`);
+  // Always allow API proxy calls through; only inject auth header when a token exists.
+  if (isApiProxy) {
+    if (token) {
+      const headers = new Headers(request.headers);
+      if (!headers.get('authorization')) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
+      return NextResponse.next({ request: { headers } });
     }
-    return NextResponse.next({ request: { headers } });
+    return NextResponse.next();
   }
 
-  // Allow landing and auth pages without tokens
-  if (!token && !isAuthPage && !isCallbackPage && !isLandingPage) {
+  // Allow landing/auth pages and API proxy requests without tokens
+  if (!token && !isAuthPage && !isCallbackPage && !isLandingPage && !isApiProxy) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // If already logged in, redirect landing/auth to dashboard
-  if (token && (isAuthPage || isCallbackPage || isLandingPage)) {
+  // If already logged in, redirect auth pages to dashboard
+  if (token && (isAuthPage || isCallbackPage)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
