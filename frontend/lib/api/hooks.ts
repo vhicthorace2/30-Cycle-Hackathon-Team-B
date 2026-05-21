@@ -523,6 +523,20 @@ export const useDiscoverCreators = (limit: number = 20, offset: number = 0, filt
   });
 };
 
+export const useSearchCreators = (query: string, limit: number = 20, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['creatorSearch', query, limit],
+    queryFn: async () => {
+      const response = await api.get<CreatorDiscoveryResponse>('/search/creators', {
+        params: { query, limit }
+      });
+      return response.data;
+    },
+    enabled: Boolean(enabled && query),
+    retry: 1,
+  });
+};
+
 export interface CreatorCompareItem {
   userId: string;
   displayName: string;

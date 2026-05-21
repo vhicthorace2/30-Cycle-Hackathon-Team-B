@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MagnifyingGlass, Star, Users, TrendUp, Briefcase, Bell, GearSix } from '@phosphor-icons/react';
 import { useDashboard } from '@/app/(protected)/layout';
-import { useDiscoverCreators, useCreatorProfile, useMeProfile, useSmeStats, useScoutCreator, useUnscoutCreator, useScoutedCreators } from '@/lib/api/hooks';
+import { useDiscoverCreators, useCreatorProfile, useMeProfile, useSmeStats, useScoutCreator, useUnscoutCreator, useScoutedCreators, useSearchCreators } from '@/lib/api/hooks';
 import { getAvatarSrc } from '@/lib/utils/avatars';
 import { Image, EnvelopeSimple, Plus, CheckCircle, Trash, UserList } from '@phosphor-icons/react';
 import api from '@/lib/api/client';
@@ -28,12 +28,12 @@ function DiscoveryScreen() {
 
   const { data: profile } = useMeProfile();
   const [search, setSearch] = useState('');
-  const { data: discoveryData, isLoading } = useDiscoverCreators(20, 0, search ? { query: search } : {});
+  const { data: discoveryData, isLoading: isDiscoverLoading } = useDiscoverCreators(20, 0, undefined, !search);
+  const { data: searchData, isLoading: isSearchLoading } = useSearchCreators(search, 20, !!search);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  if (!mounted) return null;
-
-  const creators = discoveryData?.creators || [];
+  const creators = search ? (searchData?.creators || []) : (discoveryData?.creators || []);
+  const isLoading = search ? isSearchLoading : isDiscoverLoading;
   const selected = creators.find(c => c.userId === selectedId) || null;
   const { data: fullProfile } = useCreatorProfile(selectedId || '', !!selectedId);
 
@@ -41,6 +41,8 @@ function DiscoveryScreen() {
   const { data: scoutedList, refetch: refetchScouted } = useScoutedCreators();
   const scoutMutation = useScoutCreator();
   const unscoutMutation = useUnscoutCreator();
+
+  if (!mounted) return null;
 
   const toggleShortlist = async (id: string) => {
     const isScouted = scoutedList?.some((c: any) => String(c.userId) === id);
