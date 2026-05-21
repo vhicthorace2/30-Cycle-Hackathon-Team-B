@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { clearAuthCookies, setAuthCookies } from './cookies';
+import api from '../api/client';
 
 type Role = 'admin' | 'user' | 'sme' | 'creator';
 
@@ -23,7 +24,7 @@ interface AuthState {
   setAuth: (user: User) => void;
   updateToken: (token: string, refreshToken?: string) => void;
   switchTenant: (tenant: Tenant) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()((set) => ({
@@ -34,12 +35,20 @@ export const useAuthStore = create<AuthState>()((set) => ({
   setAuth: (user) => set({ user, isAuthenticated: true, currentTenant: { id: user.tenantId, name: 'Personal' } }),
   // Keep updateToken as a no-op for compatibility with callers that may still invoke it.
   updateToken: () => undefined,
-  switchTenant: (tenant) => set({ currentTenant: tenant }),
-  logout: () => {
+  switchTenant: (tenant: Tenant) => set({ currentTenant: tenant }),
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (e) {
+      console.error('Logout failed:', e);
+    }
+    
     if (typeof window !== 'undefined') {
       window.localStorage.clear();
       window.sessionStorage.clear();
     }
+    
+    clearAuthCookies();
     set({ user: null, isAuthenticated: false, currentTenant: null });
   },
 }));

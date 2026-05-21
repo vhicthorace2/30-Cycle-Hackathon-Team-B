@@ -28,8 +28,8 @@ export default function examiddleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // If already logged in, redirect landing/auth to dashboard
-  if (token && (isAuthPage || isCallbackPage || isLandingPage)) {
+  // If already logged in, redirect auth pages to dashboard
+  if (token && (isAuthPage || isCallbackPage)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
