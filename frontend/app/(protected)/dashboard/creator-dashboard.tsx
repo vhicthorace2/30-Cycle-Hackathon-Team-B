@@ -68,6 +68,10 @@ export default function CreatorDashboard() {
   const engagementRate = perf?.engagementRate || 0;
   const followerGrowth = perf?.weeklyGrowth?.followerGrowth || 0;
   const conversions = (perf as any)?.conversions || 0;
+  const currentInfluenceScore = Math.max(
+    0,
+    Math.min(100, Number(audience?.influenceScore ?? profile?.profile?.influenceScore ?? 0))
+  );
 
   // Chart Data Preparation
   let finalTimeSeries = perf?.timeSeries || [];
@@ -184,6 +188,37 @@ export default function CreatorDashboard() {
           </motion.div>
         ))}
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="w-full rounded-[16px] border border-[#E2E8F0] bg-white p-5 shadow-sm lg:p-6"
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">Current Influence Score</p>
+            <h2 className="mt-1 text-3xl font-bold text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>
+              {isLoading ? '...' : `${currentInfluenceScore}/100`}
+            </h2>
+            <p className="mt-1 text-[12px] text-[#3C4A3D]">Real-time creator impact based on your latest channel data.</p>
+          </div>
+          <div className="w-full max-w-[380px]">
+            <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-[#3C4A3D]">
+              <span>Influence Progress</span>
+              <span className="text-[#006D32]">{isLoading ? '...' : `${currentInfluenceScore}%`}</span>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-[#E5E7EB]">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: isLoading ? '0%' : `${currentInfluenceScore}%` }}
+                transition={{ duration: 0.8 }}
+                className="h-full rounded-full bg-[#006D32]"
+              />
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Performance Chart */}
       <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#F1F5F9]">
