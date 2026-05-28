@@ -417,19 +417,19 @@ export class AuthService {
           influenceScoreUpdatedAt: null,
         });
       }
-
-      await this.authRepository.createOauthAccount({
-        userId: user.id,
-        provider: 'google',
-        purpose: 'login',
-        providerUserId: googleSubject,
-        email,
-      });
     }
 
     if (!user) {
       throw new InvalidCredentialsException({ provider: 'google' });
     }
+
+    await this.authRepository.upsertOauthAccountByUserProviderPurpose({
+      userId: user.id,
+      provider: 'google',
+      purpose: 'login',
+      providerUserId: googleSubject,
+      email,
+    });
 
     await Promise.all([
       this.usersRepository.markEmailVerified(user.id),

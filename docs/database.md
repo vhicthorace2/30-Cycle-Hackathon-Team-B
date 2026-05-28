@@ -11,9 +11,9 @@ Updated for the current schema on 2026-04-08.
 
 ## Source of Truth
 
-- Schema file: `src/database/drizzle/schema.ts`
-- Generated migrations: `src/database/drizzle/migrations/*.sql`
-- Migration metadata: `src/database/drizzle/migrations/meta/*`
+- Schema file: `shared/database/drizzle/schema.ts`
+- Generated migrations: `shared/database/drizzle/migrations/*.sql`
+- Migration metadata: `shared/database/drizzle/migrations/meta/*`
 
 The repo workflow is schema-first: edit `schema.ts`, then generate migration SQL.
 
@@ -85,6 +85,27 @@ The repo workflow is schema-first: edit `schema.ts`, then generate migration SQL
   - user_id
   - action
   - created_at
+
+### `worker_jobs`
+
+- Persistent lifecycle tracking for scheduled and queued worker jobs
+- Key fields:
+  - `id` (UUID)
+  - `parent_job_id` (nullable self-reference)
+  - `queue_name`, `job_name`, `bullmq_job_id`
+  - `request_id`
+  - `user_id`, `tenant_id` (nullable FKs)
+  - `status` enum: `pending | queued | active | retrying | completed | failed`
+  - `attempts_made`, `max_attempts`
+  - `scheduled_for`, `started_at`, `completed_at`, `failed_at`
+  - `payload`, `result`, `error_message`, `error_details`
+  - timestamps
+- Key indexes:
+  - `parent_job_id`
+  - `(queue_name, status)`
+  - `request_id`
+  - `user_id`
+  - `tenant_id`
 
 ### `user_profiles`
 
@@ -212,7 +233,7 @@ The repo workflow is schema-first: edit `schema.ts`, then generate migration SQL
 
 ## Migration Workflow
 
-1. Edit only `src/database/drizzle/schema.ts`.
+1. Edit only `shared/database/drizzle/schema.ts`.
 2. Generate migration:
 
 ```bash

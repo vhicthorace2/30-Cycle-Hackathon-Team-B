@@ -41,6 +41,9 @@ describe('AuthService', () => {
       createOauthAccount: jest.fn(),
       createAuditLog: jest.fn().mockResolvedValue(undefined),
       updateOauthAccountTokens: jest.fn(),
+      upsertOauthAccountByUserProviderPurpose: jest
+        .fn()
+        .mockResolvedValue(undefined),
     } as never;
 
     const tokensService = {
@@ -145,6 +148,9 @@ describe('AuthService', () => {
       createOauthAccount: jest.fn(),
       createAuditLog: jest.fn().mockResolvedValue(undefined),
       updateOauthAccountTokens: jest.fn(),
+      upsertOauthAccountByUserProviderPurpose: jest
+        .fn()
+        .mockResolvedValue(undefined),
     } as never;
 
     const tokensService = {

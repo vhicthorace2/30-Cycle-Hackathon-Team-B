@@ -28,7 +28,10 @@ Production-oriented NestJS v11 API boilerplate for the Creative Influence and An
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Environment Setup](#environment-setup)
+- [Workers](#workers)
+- [Logging](#logging)
 - [Database Workflow](#database-workflow)
+- [Docker Images](#docker-images)
 - [Authentication Flow](#authentication-flow)
 - [Project Structure](#project-structure)
 - [Scripts](#scripts)
@@ -206,6 +209,39 @@ At minimum configure:
 - `REDIS_PASSWORD` (if Redis requires auth)
 
 See [.env.example](./.env.example) for full template.
+
+## Workers
+
+The Fastify + BullMQ worker runtime lives under `workers/` and runs separately from the API.
+
+Local dev:
+
+```bash
+pnpm --dir workers run start:dev
+```
+
+Docker Compose (worker only):
+
+```bash
+docker compose --profile workers up --build
+```
+
+## Logging
+
+Structured logs support a readable pretty format with ANSI colors.
+
+- `LOG_FORMAT=pretty` enables multi-line output.
+- `LOG_COLOR=true` turns on ANSI colors (default when `pretty` is used).
+- `LOG_COLOR=false` disables ANSI colors.
+
+## Docker Images
+
+Build the API and worker as separate images using multi-stage targets:
+
+```bash
+docker build -f dockerfile --target backend-runtime -t ciap-apis .
+docker build -f dockerfile --target worker-runtime -t ciap-workers .
+```
 
 ## Database Workflow
 

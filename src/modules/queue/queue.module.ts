@@ -12,7 +12,7 @@ import { QueueService } from './queue.service';
  * - REDIS_URL: Redis connection string (required, supports redis:// and rediss://)
  * - BULLMQ_PREFIX: Queue name prefix (default: "Queue")
  * - BULLMQ_MAX_RETRIES: Max retry attempts (default: 3)
- * - BULLMQ_BACKOFF_DELAY_MS: Initial backoff delay in ms (default: 3000)
+ * - BULLMQ_BACKOFF_DELAY_MINUTES: Initial backoff delay in minutes (default: 0.05)
  * - BULLMQ_QUEUE_BACKPRESSURE_LIMIT: Max queue depth before warning (default: 100)
  *
  * Usage:

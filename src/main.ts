@@ -81,9 +81,7 @@ async function bootstrap() {
   const httpLogMode = resolveHttpLogMode(process.env.LOG_HTTP_MODE);
   const corsOriginList = parseEnvList(process.env.CORS_ORIGIN);
   const corsOrigins =
-    corsOriginList.length > 0
-      ? corsOriginList
-      : ['http://localhost:3000'];
+    corsOriginList.length > 0 ? corsOriginList : ['http://localhost:3000'];
   const winstonLogger = new WinstonLoggerService('WinstonBootstrap', {
     level: logLevel,
     formatMode: logFormat,

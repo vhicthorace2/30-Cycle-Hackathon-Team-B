@@ -31,6 +31,7 @@ Updated for the current runtime config on 2026-04-08.
 - `LOG_HTTP_MODE` (`off`, `errors`, `all`; default `errors`)
 - `LOG_LEVEL` (default `info` when unset)
 - `LOG_FORMAT` (`pretty` or `json`, defaults to `json` for invalid/missing values)
+- `LOG_COLOR` (enable ANSI colors for `LOG_FORMAT=pretty`, default `true`)
 - `LOG_TO_FILE` (default `false`)
 - `LOG_FILE_PATH` (default `./logs/ciap.log`)
 - `LOG_FILE_LEVEL` (default inherits `LOG_LEVEL`)
@@ -63,7 +64,7 @@ Updated for the current runtime config on 2026-04-08.
 
 - `API_VERSION`
 - `API_PREFIX`
-- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_WINDOW_MINUTES`
 - `RATE_LIMIT_MAX_REQUESTS`
 - `CACHE_TTL`
 - `CACHE_MAX_SIZE`
@@ -84,6 +85,20 @@ Updated for the current runtime config on 2026-04-08.
 - `REDIS_PASSWORD`
 - `REDIS_URL`
 - `BULLMQ_PREFIX`
+- `WORKER_PORT`
+- `WORKER_HOST`
+- `WORKER_SCHEDULER_ENABLED`
+- `WORKER_EXIT_ON_IDLE`
+- `WORKER_IDLE_TIMEOUT_MINUTES`
+- `YOUTUBE_SYNC_BATCH_SCHEDULE_MINUTES`
+- `YOUTUBE_SYNC_STALE_AFTER_MINUTES`
+- `YOUTUBE_SYNC_BATCH_SIZE`
+- `WORKER_BATCH_CONCURRENCY`
+- `WORKER_SYNC_CONCURRENCY`
+- `WORKER_ML_CONCURRENCY`
+- `ML_INFERENCING_SCHEDULE_MINUTES`
+- `ML_BASE_URL`
+- `GOOGLE_API_TIMEOUT_MINUTES`
 - `BULLBOARD_PORT`
 - `BULLBOARD_ROOT_PATH`
 
@@ -109,6 +124,7 @@ Updated for the current runtime config on 2026-04-08.
 - Database connection uses `DATABASE_URL`.
 - BullMQ/Redis compose wiring uses `REDIS_HOST`, `REDIS_PORT`, and `REDIS_URL` values passed by Docker Compose.
 - `REDIS_URL` supports `redis://` and `rediss://` for BullMQ queue connections, including ACL usernames and `/db` path selection.
+- The worker runtime reads the same `.env` file as the backend by default and uses `WORKER_*` and `YOUTUBE_SYNC_*` variables for schedules and concurrency.
 
 ## Setup Checklist
 

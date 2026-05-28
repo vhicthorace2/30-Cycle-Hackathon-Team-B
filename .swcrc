@@ -13,5 +13,10 @@
   "module": {
     "type": "commonjs"
   },
-  "sourceMaps": true
+  "sourceMaps": true,
+  "exclude": [
+    "node_modules",
+    "dist",
+    "workers"
+  ]
 }

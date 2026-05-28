@@ -5,8 +5,8 @@ Compact reference for Drizzle schema, migrations, and database access.
 ## Current Setup
 
 - Database module: `src/database/database.module.ts`
-- Schema: `src/database/drizzle/schema.ts`
-- Migrations: `src/database/drizzle/migrations/`
+- Shared schema: `shared/database/drizzle/schema.ts`
+- Shared migrations: `shared/database/drizzle/migrations/`
 - Seeds: `src/database/seeds/`
 - Provider token: `DATABASE_CONNECTION`
 
@@ -20,7 +20,7 @@ Compact reference for Drizzle schema, migrations, and database access.
 
 ## Workflow
 
-1. Edit `src/database/drizzle/schema.ts`.
+1. Edit `shared/database/drizzle/schema.ts`.
 2. Run `pnpm run db:generate`.
 3. Review the generated migration.
 4. Run `pnpm run db:migrate`.

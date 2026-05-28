@@ -101,14 +101,28 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
           context: .
           file: dockerfile
+          target: backend-runtime
           push: true
           tags: |
             ${{ env.DOCKERHUB_USERNAME }}/ciap-apis:latest
             ${{ env.DOCKERHUB_USERNAME }}/ciap-apis:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push worker
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfile
+          target: worker-runtime
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_USERNAME }}/ciap-workers:latest
+            ${{ env.DOCKERHUB_USERNAME }}/ciap-workers:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

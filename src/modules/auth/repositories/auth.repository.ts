@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { DATABASE_PROVIDER } from '@database/database.module';
 import type { Database } from '@database/database.module';
 import { auditLogs, oauthAccounts } from '@database/drizzle/schema';
@@ -100,6 +100,29 @@ export class AuthRepository {
       .returning();
 
     return updated;
+  }
+
+  async upsertOauthAccountByUserProviderPurpose(
+    data: NewOauthAccount,
+  ): Promise<OauthAccount> {
+    const [upserted] = await this.db
+      .insert(oauthAccounts)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [
+          oauthAccounts.userId,
+          oauthAccounts.provider,
+          oauthAccounts.purpose,
+        ],
+        set: {
+          providerUserId: sql`excluded.provider_user_id`,
+          email: sql`excluded.email`,
+          updatedAt: sql`now()`,
+        },
+      })
+      .returning();
+
+    return upserted;
   }
 
   async deleteOauthAccountByUserAndProvider(

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { ConnectionOptions, QueueOptions } from 'bullmq';
+import { parseRedisUrl } from '@shared/queue/redis-connection';
 
 /**
  * BullMQ queue configuration provider.
@@ -19,8 +20,15 @@ export class QueueConfigService {
     this.redisUrl = this.configService.get<string>('REDIS_URL') || '';
     this.prefix = this.configService.get<string>('BULLMQ_PREFIX') || 'Queue';
     this.maxRetries = this.configService.get<number>('BULLMQ_MAX_RETRIES') ?? 3;
-    this.backoffDelayMs =
-      this.configService.get<number>('BULLMQ_BACKOFF_DELAY_MS') ?? 3000;
+    const backoffMinutes =
+      this.configService.get<number>('BULLMQ_BACKOFF_DELAY_MINUTES') ?? null;
+    const legacyBackoffMs =
+      this.configService.get<number>('BULLMQ_BACKOFF_DELAY_MS') ?? null;
+    this.backoffDelayMs = Number.isFinite(backoffMinutes)
+      ? Number(backoffMinutes) * 60_000
+      : Number.isFinite(legacyBackoffMs)
+        ? Number(legacyBackoffMs)
+        : 3000;
     this.queueBackpressureLimit =
       this.configService.get<number>('BULLMQ_QUEUE_BACKPRESSURE_LIMIT') ?? 100;
 
@@ -58,7 +66,7 @@ export class QueueConfigService {
       attempts: this.maxRetries + 1, // 4 total attempts (1 initial + 3 retries)
       backoff: {
         type: 'exponential',
-        delay: this.backoffDelayMs, // 3000ms = 3s
+        delay: this.backoffDelayMs,
       },
     };
   }
@@ -84,47 +92,6 @@ export class QueueConfigService {
    * Supports redis:// and rediss:// URLs, ACL usernames, and /db indexes.
    */
   private parseRedisUrl(): ConnectionOptions {
-    try {
-      const url = new URL(this.redisUrl);
-      if (url.protocol !== 'redis:' && url.protocol !== 'rediss:') {
-        throw new Error(`Unsupported Redis protocol: ${url.protocol}`);
-      }
-
-      const connection = {
-        host: url.hostname,
-        port: url.port ? Number.parseInt(url.port, 10) : 6379,
-        username: url.username || undefined,
-        password: url.password || undefined,
-        db: this.parseRedisDbIndex(url),
-        ...(url.protocol === 'rediss:'
-          ? {
-              tls: {
-                servername: url.hostname,
-              },
-            }
-          : {}),
-      } satisfies ConnectionOptions;
-
-      return connection;
-    } catch (error) {
-      throw new Error(
-        `Invalid REDIS_URL format: ${this.redisUrl}${error instanceof Error ? ` (${error.message})` : ''}`,
-      );
-    }
-  }
-
-  private parseRedisDbIndex(url: URL): number {
-    const pathname = url.pathname.replace(/^\/+/, '');
-
-    if (!pathname) {
-      return 0;
-    }
-
-    const db = Number.parseInt(pathname, 10);
-    if (!Number.isInteger(db) || db < 0) {
-      throw new Error('Redis database index must be a non-negative integer');
-    }
-
-    return db;
+    return parseRedisUrl(this.redisUrl);
   }
 }

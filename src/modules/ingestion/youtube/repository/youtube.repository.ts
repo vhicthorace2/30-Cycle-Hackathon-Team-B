@@ -35,10 +35,14 @@ export class YoutubeRepository {
   async upsertChannel(channel: NewYoutubeChannel): Promise<YoutubeChannel> {
     const result = await this.db
       .insert(youtubeChannels)
-      .values(channel)
+      .values({
+        ...channel,
+        lastSyncedAt: new Date(),
+      })
       .onConflictDoUpdate({
         target: youtubeChannels.youtubeChannelId,
         set: {
+          userId: channel.userId,
           channelTitle: channel.channelTitle,
           channelDescription: channel.channelDescription,
           thumbnailUrl: channel.thumbnailUrl,
@@ -46,6 +50,7 @@ export class YoutubeRepository {
           subscriberCount: channel.subscriberCount,
           videoCount: channel.videoCount,
           uploadPlaylistId: channel.uploadPlaylistId,
+          lastSyncedAt: new Date(),
         },
       })
       .returning();
@@ -62,10 +67,16 @@ export class YoutubeRepository {
 
     return this.db
       .insert(youtubeVideos)
-      .values(videos)
+      .values(
+        videos.map((video) => ({
+          ...video,
+          lastSyncedAt: new Date(),
+        })),
+      )
       .onConflictDoUpdate({
         target: youtubeVideos.youtubeVideoId,
         set: {
+          channelId: sql`excluded.channel_id`,
           videoTitle: sql`excluded.video_title`,
           videoDescription: sql`excluded.video_description`,
           publishedAt: sql`excluded.published_at`,
@@ -73,6 +84,7 @@ export class YoutubeRepository {
           viewCount: sql`excluded.view_count`,
           likeCount: sql`excluded.like_count`,
           commentCount: sql`excluded.comment_count`,
+          lastSyncedAt: sql`now()`,
           updatedAt: sql`now()`,
         },
       })
