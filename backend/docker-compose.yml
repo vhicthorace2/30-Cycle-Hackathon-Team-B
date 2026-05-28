@@ -8,15 +8,11 @@ services:
   # Not needed for Redis + BullBoard-only local development
   # -----------------------------
   apis:
-<<<<<<< HEAD
-    image: sammythadev/ciap-apis:latest
-=======
     image: ciap-apis
     build:
       context: .
       dockerfile: dockerfile
       target: backend-runtime
->>>>>>> d8d4baa8b75c457da2acd9dbd014d9c3cc37ef56
     hostname: apis
     container_name: ciap-apis
     restart: on-failure
@@ -89,8 +85,6 @@ services:
     networks:
       - app-network
 
-<<<<<<< HEAD
-=======
   workers:
     image: ciap-workers
     build:
@@ -148,7 +142,6 @@ services:
     networks:
       - app-network
 
->>>>>>> d8d4baa8b75c457da2acd9dbd014d9c3cc37ef56
   # -----------------------------
   # Redis queue backend
   # Run with: docker compose up redis

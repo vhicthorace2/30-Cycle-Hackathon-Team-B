@@ -785,9 +785,6 @@ export class SocialsService {
     url: string,
     accessToken: string,
   ): Promise<T> {
-<<<<<<< HEAD
-    const timeoutMs = Number(process.env.GOOGLE_API_TIMEOUT_MS || '10000');
-=======
     const timeoutMinutes = Number(
       process.env.GOOGLE_API_TIMEOUT_MINUTES || '0',
     );
@@ -798,7 +795,6 @@ export class SocialsService {
         : Number.isFinite(legacyTimeoutMs) && legacyTimeoutMs > 0
           ? legacyTimeoutMs
           : 10_000;
->>>>>>> d8d4baa8b75c457da2acd9dbd014d9c3cc37ef56
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     let response: globalThis.Response;

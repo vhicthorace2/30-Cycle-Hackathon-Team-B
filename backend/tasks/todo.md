@@ -24,8 +24,6 @@ Use this file to keep substantial tasks planned, tracked, and closed out.
 
 ## Active / Recent Tasks
 
-<<<<<<< HEAD
-=======
 ## Task: Add worker Docker image to GitHub Actions CI
 
 - Date: 2026-05-28
@@ -273,7 +271,6 @@ Use this file to keep substantial tasks planned, tracked, and closed out.
 - Result:
   - Completed. The repo now has a shared backend-worker runtime layer, a Fastify + BullMQ worker system for scheduled YouTube sync jobs, a persistent `worker_jobs` table for lifecycle tracking, shared env/package/docker wiring, and updated repo instructions that treat `workers/` as part of the backend architecture.
 
->>>>>>> d8d4baa8b75c457da2acd9dbd014d9c3cc37ef56
 ## Task: Redirect YouTube OAuth callback to frontend
 
 - Date: 2026-05-22

@@ -22,8 +22,6 @@ Append-only notes for discoveries, decisions, and gotchas.
 
 ## Current Findings
 
-<<<<<<< HEAD
-=======
 ## Backend and Worker SWC Compile Fixed (2026-05-27)
 
 - Context: The backend and worker compilation with SWC were broken after moving the `shared` directory to the root.
@@ -48,7 +46,6 @@ Append-only notes for discoveries, decisions, and gotchas.
 - Finding: The compiled worker JS still emits `@shared/*` imports, so the runtime uses `workers/register-paths.cjs` to map those imports to `workers/dist/shared/*` after SWC transpilation.
 - Impact: Future worker build changes should preserve or deliberately replace that alias-resolution hook, otherwise compiled worker startup will fail even when typecheck/build pass.
 
->>>>>>> d8d4baa8b75c457da2acd9dbd014d9c3cc37ef56
 ## YouTube Connected Status Must Use youtube-connect Grant (2026-05-21)
 
 - Context: Added YouTube disconnect and aligned integrations UI with the backend OAuth records.

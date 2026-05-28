@@ -28,14 +28,10 @@ Production-oriented NestJS v11 API boilerplate for the Creative Influence and An
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Environment Setup](#environment-setup)
-<<<<<<< HEAD
-- [Database Workflow](#database-workflow)
-=======
 - [Workers](#workers)
 - [Logging](#logging)
 - [Database Workflow](#database-workflow)
 - [Docker Images](#docker-images)
->>>>>>> d8d4baa8b75c457da2acd9dbd014d9c3cc37ef56
 - [Authentication Flow](#authentication-flow)
 - [Project Structure](#project-structure)
 - [Scripts](#scripts)
@@ -214,8 +210,6 @@ At minimum configure:
 
 See [.env.example](./.env.example) for full template.
 
-<<<<<<< HEAD
-=======
 ## Workers
 
 The Fastify + BullMQ worker runtime lives under `workers/` and runs separately from the API.
@@ -249,7 +243,6 @@ docker build -f dockerfile --target backend-runtime -t ciap-apis .
 docker build -f dockerfile --target worker-runtime -t ciap-workers .
 ```
 
->>>>>>> d8d4baa8b75c457da2acd9dbd014d9c3cc37ef56
 ## Database Workflow
 
 Schema source of truth:
