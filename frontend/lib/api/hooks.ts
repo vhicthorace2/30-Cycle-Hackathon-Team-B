@@ -256,11 +256,16 @@ export const useMeProfile = (enabled: boolean = true) => {
 };
 
 export const useUpdateCreatorProfile = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: { displayName?: string; bio?: string; avatarUrl?: string; location?: string; industry?: string; creatorTypes?: string[] }) => {
       const response = await api.post('/users/me/onboard', data);
       return response.data;
-    }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
+    },
   });
 };
 

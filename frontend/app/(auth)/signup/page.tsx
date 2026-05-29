@@ -264,7 +264,7 @@ export default function Signup() {
       // Backend sets httpOnly cookies and returns user — store only the user object client-side.
       useAuthStore.getState().setAuth(data.user);
       toast.success(`Welcome to Omniview, ${data.user.name}!`);
-      router.replace('/auth/welcome');
+      router.replace('/onboarding');
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || 'Signup failed';
       toast.error(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg);

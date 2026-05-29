@@ -7,7 +7,8 @@ export default function examiddleware(request: NextRequest) {
 
   const isApiProxy = pathname.startsWith('/api-proxy');
 
-  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/onboarding') || pathname.startsWith('/welcome');
+  const isOnboardingPage = pathname.startsWith('/onboarding');
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup') || isOnboardingPage || pathname.startsWith('/welcome');
   const isCallbackPage = pathname.startsWith('/callback');
   const isLandingPage = pathname === '/';
   
@@ -29,7 +30,7 @@ export default function examiddleware(request: NextRequest) {
   }
 
   // If already logged in, redirect auth pages to dashboard
-  if (token && (isAuthPage || isCallbackPage)) {
+  if (token && ((isAuthPage && !isOnboardingPage) || isCallbackPage)) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
