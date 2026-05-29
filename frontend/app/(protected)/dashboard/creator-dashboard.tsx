@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Lightning, Users, ShoppingCart, ArrowsClockwise, PlayCircle, InstagramLogo, TiktokLogo, CaretRight, YoutubeLogo, LinkSimple } from '@phosphor-icons/react';
+import { Eye, Lightning, Users, ShoppingCart, ArrowsClockwise, PlayCircle, InstagramLogo, TiktokLogo, CaretRight, YoutubeLogo, LinkSimple, Sparkle } from '@phosphor-icons/react';
 import { useAudienceInsights, usePerformanceInsights, useMeProfile, useYoutubeMetrics, usePrepareYoutubeOauth } from '@/lib/api/hooks';
 import { getYoutubeErrorToastMessage } from '@/lib/api/errors';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -259,6 +259,45 @@ export default function CreatorDashboard() {
           </div>
         </div>
       </motion.div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {[
+          {
+            title: 'AI Content Recommendations',
+            description: 'Get topic, posting cadence, and content format suggestions from your channel performance.',
+            accent: '#6B61F0',
+          },
+          {
+            title: 'AI Content Improvement',
+            description: 'Identify which videos need stronger hooks, thumbnails, titles, and audience retention fixes.',
+            accent: '#006D32',
+          },
+        ].map((item, index) => (
+          <motion.div
+            key={item.title}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 + index * 0.05 }}
+            className="relative overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white p-5 shadow-sm"
+          >
+            <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full blur-3xl" style={{ background: `${item.accent}22` }} />
+            <div className="relative flex gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0B1C30] text-white">
+                <Sparkle size={24} weight="fill" className="text-[#64FF92]" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-black text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>{item.title}</h2>
+                  <span className="rounded-full bg-[#EFF4FF] px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-[#6B61F0]">
+                    Coming soon
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-[#3C4A3D]">{item.description}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
       {/* Performance Chart */}
       <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#F1F5F9]">

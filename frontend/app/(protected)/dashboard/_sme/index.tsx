@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { MagnifyingGlass, Star, Users, TrendUp, Briefcase, Bell, GearSix } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, Users, TrendUp, Briefcase, Bell, GearSix, Sparkle } from '@phosphor-icons/react';
 import { useDashboard } from '@/app/(protected)/layout';
 import {
   useAddCreatorToCampaign,
@@ -179,6 +179,38 @@ function DiscoveryScreen() {
           Creator Discovery
         </h1>
         <p className="text-[#3C4A3D] mt-1">Scout and evaluate high-potential creators across platforms.</p>
+      </div>
+
+      <div className="relative overflow-hidden rounded-3xl border border-[#D3E4FE] bg-white p-6 shadow-sm">
+        <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[#64FF92]/30 blur-3xl" />
+        <div className="absolute right-20 top-5 h-20 w-20 rounded-full bg-[#6B61F0]/20 blur-2xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0B1C30] text-white shadow-lg shadow-[#6B61F0]/20">
+              <Sparkle size={26} weight="fill" className="text-[#64FF92]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-[#0B1C30] px-2.5 py-1 text-[10px] font-black tracking-widest text-white">AI</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#006D32]">Coming soon</span>
+              </div>
+              <h2 className="mt-2 text-xl font-black text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>
+                Predict highest-ROI creators before you spend.
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#3C4A3D]">
+                Forecast expected reach, fit, and ROI risk so SMEs can shortlist creators with stronger confidence before committing budget.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+            {['ROI fit', 'Budget risk', 'Creator match'].map((label) => (
+              <div key={label} className="rounded-2xl bg-[#EFF4FF] px-3 py-3 text-[#0B1C30]">
+                <Sparkle size={14} weight="fill" className="mx-auto mb-1 text-[#6B61F0]" />
+                {label}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -612,10 +644,22 @@ function MarketInsights() {
 
 function CampaignManager() {
   const { data: campaigns, isLoading } = useSmeCampaigns();
+  const { data: scouted, isLoading: isLoadingScouted } = useScoutedCreators();
   const createCampaignMutation = useCreateSmeCampaign();
+  const addCreatorToCampaignMutation = useAddCreatorToCampaign();
   const [campaignName, setCampaignName] = useState('');
   const [campaignDescription, setCampaignDescription] = useState('');
   const [campaignBudget, setCampaignBudget] = useState('');
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | ''>('');
+  const [selectedCreatorId, setSelectedCreatorId] = useState('');
+  const [forecastCampaignId, setForecastCampaignId] = useState<number | null>(null);
+
+  const forecastCampaign = campaigns?.find((campaign) => campaign.id === forecastCampaignId) || null;
+  const forecastCreatorCount = Math.max(1, forecastCampaign?.creatorCount || 1);
+  const forecastBudget = forecastCampaign?.budgetAmount || 2500;
+  const forecastReach = forecastCreatorCount * 185000;
+  const forecastRoi = Math.max(1.6, Math.min(6.2, forecastReach / Math.max(forecastBudget, 1) / 220));
+  const forecastConfidence = Math.min(94, 68 + forecastCreatorCount * 6);
 
   const handleCreateCampaign = async () => {
     if (!campaignName.trim()) {
@@ -639,11 +683,63 @@ function CampaignManager() {
     }
   };
 
+  const handleAddCreatorToCampaign = async () => {
+    if (!selectedCampaignId || !selectedCreatorId) {
+      toast.error('Select a campaign and a creator first.');
+      return;
+    }
+
+    try {
+      await addCreatorToCampaignMutation.mutateAsync({
+        campaignId: Number(selectedCampaignId),
+        data: {
+          creatorId: selectedCreatorId,
+          status: 'shortlisted',
+        },
+      });
+      setSelectedCreatorId('');
+      toast.success('Creator added to campaign.');
+    } catch {
+      toast.error('Unable to add creator to campaign.');
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>Campaign Manager</h1>
         <p className="text-[#3C4A3D] mt-1">Track performance and milestones of active creator collaborations.</p>
+      </div>
+
+      <div className="relative overflow-hidden rounded-3xl border border-[#D3E4FE] bg-[#0B1C30] p-6 text-white shadow-sm">
+        <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#64FF92]/30 blur-3xl" />
+        <div className="absolute right-24 top-6 h-24 w-24 rounded-full bg-[#6B61F0]/30 blur-2xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
+              <Sparkle size={28} weight="fill" className="text-[#64FF92] drop-shadow" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black tracking-widest text-[#0B1C30]">AI</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#64FF92]">Forecasting preview</span>
+              </div>
+              <h2 className="mt-2 text-2xl font-black" style={{ fontFamily: "'Space Grotesk'" }}>
+                Predict creator ROI before budget is spent.
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/70">
+                Open a campaign forecast to estimate reach, confidence, and ROI direction from its current creator mix.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setForecastCampaignId(campaigns?.[0]?.id ?? null)}
+            disabled={!campaigns?.length}
+            className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#0B1C30] transition hover:bg-[#64FF92] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Open forecast
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm lg:grid-cols-[1.2fr_1.6fr_0.8fr_auto]">
@@ -675,6 +771,37 @@ function CampaignManager() {
         </button>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm lg:grid-cols-[1.2fr_1.2fr_auto]">
+        <select
+          value={selectedCampaignId}
+          onChange={(e) => setSelectedCampaignId(e.target.value ? Number(e.target.value) : '')}
+          className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#006D32]/20"
+        >
+          <option value="">Select campaign</option>
+          {campaigns?.map((campaign) => (
+            <option key={campaign.id} value={campaign.id}>{campaign.name}</option>
+          ))}
+        </select>
+        <select
+          value={selectedCreatorId}
+          onChange={(e) => setSelectedCreatorId(e.target.value)}
+          disabled={isLoadingScouted}
+          className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#006D32]/20 disabled:opacity-60"
+        >
+          <option value="">{isLoadingScouted ? 'Loading creators...' : 'Select shortlisted creator'}</option>
+          {scouted?.map((creator) => (
+            <option key={creator.userId} value={creator.userId}>{creator.displayName || `Creator #${creator.userId}`}</option>
+          ))}
+        </select>
+        <button
+          onClick={handleAddCreatorToCampaign}
+          disabled={addCreatorToCampaignMutation.isPending}
+          className="rounded-xl bg-[#0B1C30] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#132b44] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {addCreatorToCampaignMutation.isPending ? 'Adding...' : 'Add Creator'}
+        </button>
+      </div>
+
       <div className="bg-white rounded-3xl border border-[#F1F5F9] shadow-sm overflow-hidden">
          <table className="w-full text-left">
             <thead>
@@ -684,12 +811,13 @@ function CampaignManager() {
                   <th className="p-6 text-[10px] font-bold text-[#3C4A3D] uppercase tracking-widest">CREATORS</th>
                   <th className="p-6 text-[10px] font-bold text-[#3C4A3D] uppercase tracking-widest">BUDGET</th>
                   <th className="p-6 text-[10px] font-bold text-[#3C4A3D] uppercase tracking-widest">STATUS</th>
+                  <th className="p-6 text-[10px] font-bold text-[#3C4A3D] uppercase tracking-widest">AI</th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-[#F1F5F9]">
                {isLoading && (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-sm text-[#6B7280]">
+                    <td colSpan={6} className="p-8 text-center text-sm text-[#6B7280]">
                       Loading campaigns...
                     </td>
                   </tr>
@@ -716,11 +844,20 @@ function CampaignManager() {
                            {campaign.status}
                         </span>
                      </td>
+                     <td className="p-6">
+                        <button
+                          onClick={() => setForecastCampaignId(campaign.id)}
+                          className="inline-flex items-center gap-2 rounded-full bg-[#EFF4FF] px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-[#6B61F0] transition hover:bg-[#E5EEFF]"
+                        >
+                          <Sparkle size={14} weight="fill" />
+                          Forecast
+                        </button>
+                     </td>
                   </tr>
                ))}
                {!isLoading && (!campaigns || campaigns.length === 0) && (
                   <tr>
-                    <td colSpan={5} className="p-10 text-center text-sm text-[#6B7280]">
+                    <td colSpan={6} className="p-10 text-center text-sm text-[#6B7280]">
                       No campaigns yet. Create one to start assigning shortlisted creators.
                     </td>
                   </tr>
@@ -728,6 +865,64 @@ function CampaignManager() {
             </tbody>
          </table>
       </div>
+
+      {forecastCampaign && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1C30]/50 px-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl"
+          >
+            <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-[#64FF92]/40 blur-3xl" />
+            <div className="absolute right-20 top-4 h-24 w-24 rounded-full bg-[#6B61F0]/20 blur-2xl" />
+            <div className="relative space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0B1C30] text-white shadow-lg shadow-[#6B61F0]/20">
+                    <Sparkle size={26} weight="fill" className="text-[#64FF92]" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#6B61F0]">AI Campaign Forecast</p>
+                    <h2 className="text-2xl font-black text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>{forecastCampaign.name}</h2>
+                    <p className="mt-1 text-sm text-[#6B7280]">Directional preview from campaign budget and creator count.</p>
+                  </div>
+                </div>
+                <button onClick={() => setForecastCampaignId(null)} className="rounded-full bg-[#F8F9FF] px-3 py-1 text-xs font-bold text-[#6B7280]">
+                  Close
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-2xl bg-[#EFF4FF] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#6B7280]">Reach</p>
+                  <p className="mt-2 text-xl font-black text-[#0B1C30]">{(forecastReach / 1000).toFixed(0)}K</p>
+                </div>
+                <div className="rounded-2xl bg-[#F0FDF4] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#6B7280]">ROI</p>
+                  <p className="mt-2 text-xl font-black text-[#006D32]">{forecastRoi.toFixed(1)}x</p>
+                </div>
+                <div className="rounded-2xl bg-[#F8F9FF] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#6B7280]">Confidence</p>
+                  <p className="mt-2 text-xl font-black text-[#6B61F0]">{forecastConfidence}%</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[#E2E8F0] p-4">
+                <div className="mb-2 flex justify-between text-xs font-bold">
+                  <span className="text-[#6B7280]">Forecast strength</span>
+                  <span className="text-[#006D32]">{forecastConfidence}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-[#E5E7EB]">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#6B61F0] via-[#006D32] to-[#64FF92]" style={{ width: `${forecastConfidence}%` }} />
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-[#3C4A3D]">
+                  Best use: compare shortlisted creators before committing spend. Full AI ranking and ROI simulation is coming soon.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
