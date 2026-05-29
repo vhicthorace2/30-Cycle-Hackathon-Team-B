@@ -7,6 +7,7 @@ import { MagnifyingGlass, Star, Users, TrendUp, Briefcase, Bell, GearSix, Sparkl
 import { useDashboard } from '@/app/(protected)/layout';
 import {
   useAddCreatorToCampaign,
+  useCompareCreators,
   useCreateSmeCampaign,
   useCreatorProfile,
   useDiscoverCreators,
@@ -53,12 +54,19 @@ function DiscoveryScreen() {
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | ''>('');
+  const [compareCreatorIds, setCompareCreatorIds] = useState<string[]>([]);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
 
   const creators = search ? (searchData?.creators || []) : (discoveryData?.creators || []);
   const moreCreators = !search && showMoreCreators ? (moreCreatorsData?.creators || []) : [];
   const isLoading = search ? isSearchLoading : isDiscoverLoading;
   const selected = [...creators, ...moreCreators].find(c => c.userId === selectedId) || null;
   const { data: fullProfile } = useCreatorProfile(selectedId || '', !!selectedId);
+  const { data: compareData, isLoading: isComparing } = useCompareCreators(
+    compareCreatorIds,
+    undefined,
+    isCompareOpen && compareCreatorIds.length === 2,
+  );
 
   const { data: stats } = useSmeStats();
   const { data: scoutedList, refetch: refetchScouted } = useScoutedCreators();
@@ -123,6 +131,26 @@ function DiscoveryScreen() {
 
   const hasNextPage = !search && creators.length === DISCOVERY_PAGE_SIZE;
   const hasPrevPage = !search && page > 0;
+  const visibleCreators = [...creators, ...moreCreators];
+
+  const toggleCompareCreator = (id: string) => {
+    setCompareCreatorIds((current) => {
+      if (current.includes(id)) return current.filter((creatorId) => creatorId !== id);
+      if (current.length >= 2) {
+        toast.info('Compare supports two creators at a time.');
+        return current;
+      }
+      return [...current, id];
+    });
+  };
+
+  const openCompare = () => {
+    if (compareCreatorIds.length !== 2) {
+      toast.error('Select two creators to compare.');
+      return;
+    }
+    setIsCompareOpen(true);
+  };
 
   const renderCreatorCard = (c: any) => (
     <motion.div
@@ -166,6 +194,26 @@ function DiscoveryScreen() {
             initial={{ width: 0 }} animate={{ width: `${c.influenceScore || 0}%` }} transition={{ duration: 1 }}
             className="h-full bg-[#006D32] rounded-full"
           />
+        </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#F3F4F6] pt-3">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleCompareCreator(String(c.userId));
+          }}
+          className={`rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition ${
+            compareCreatorIds.includes(String(c.userId))
+              ? 'bg-[#0B1C30] text-white'
+              : 'bg-[#EFF4FF] text-[#006D32] hover:bg-[#D3E4FE]'
+          }`}
+        >
+          {compareCreatorIds.includes(String(c.userId)) ? 'Selected' : 'Compare'}
+        </button>
+        <div className="inline-flex items-center gap-1 rounded-full bg-[#F8F9FF] px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#6B61F0]">
+          <Sparkle size={12} weight="fill" />
+          AI soon
         </div>
       </div>
     </motion.div>
@@ -262,6 +310,44 @@ function DiscoveryScreen() {
               placeholder="Search creators by name or category..."
               className="w-full pl-10 pr-4 py-2.5 bg-[#EFF4FF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006D32]/20"
             />
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-black text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>
+                  Compare creators
+                </p>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#EFF4FF] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[#6B61F0]">
+                  <Sparkle size={11} weight="fill" />
+                  AI comparison coming soon
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-[#6B7280]">
+                Select two creators, then compare reach and influence side by side.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {compareCreatorIds.map((id) => {
+                const creator = visibleCreators.find((item) => String(item.userId) === id);
+                return (
+                  <button
+                    key={id}
+                    onClick={() => toggleCompareCreator(id)}
+                    className="rounded-full bg-[#F0FDF4] px-3 py-1.5 text-[10px] font-bold text-[#006D32]"
+                  >
+                    {creator?.displayName || `Creator #${id}`} ×
+                  </button>
+                );
+              })}
+              <button
+                onClick={openCompare}
+                disabled={compareCreatorIds.length !== 2}
+                className="rounded-xl bg-[#0B1C30] px-4 py-2 text-xs font-black text-white transition hover:bg-[#132b44] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Compare
+              </button>
+            </div>
           </div>
 
           {selected && (
@@ -492,6 +578,98 @@ function DiscoveryScreen() {
           )}
         </div>
       </div>
+
+      {isCompareOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1C30]/50 px-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-2xl overflow-hidden rounded-3xl bg-white p-6 shadow-2xl"
+          >
+            <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-[#64FF92]/40 blur-3xl" />
+            <div className="absolute right-20 top-4 h-24 w-24 rounded-full bg-[#6B61F0]/20 blur-2xl" />
+            <div className="relative space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0B1C30] text-white shadow-lg shadow-[#6B61F0]/20">
+                    <Sparkle size={26} weight="fill" className="text-[#64FF92]" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#6B61F0]">Creator Compare</p>
+                    <h2 className="text-2xl font-black text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>
+                      Side-by-side creator fit
+                    </h2>
+                    <p className="mt-1 text-sm text-[#6B7280]">
+                      Uses the existing compare endpoint. AI ranking and ROI reasoning are coming soon.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsCompareOpen(false)}
+                  className="rounded-full bg-[#F8F9FF] px-3 py-1 text-xs font-bold text-[#6B7280]"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="rounded-2xl border border-[#D3E4FE] bg-[#EFF4FF] p-4">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#6B61F0]">
+                  <Sparkle size={15} weight="fill" />
+                  AI comparison coming soon
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-[#3C4A3D]">
+                  This will predict which creator is likely to deliver stronger ROI, lower budget risk, and better audience fit.
+                </p>
+              </div>
+
+              {isComparing ? (
+                <div className="py-12 text-center text-sm font-bold text-[#6B7280]">Comparing creators...</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {(compareData?.creators || compareCreatorIds.map((id) => visibleCreators.find((creator) => String(creator.userId) === id)).filter(Boolean)).map((creator: any) => {
+                    const influenceScore = Number(creator.influenceScore || 0);
+                    const audienceSize = Number(creator.audienceSize || 0);
+                    return (
+                      <div key={creator.userId} className="rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 overflow-hidden rounded-2xl bg-[#EFF4FF]">
+                            <img src={getAvatarSrc(creator.userId, 'creator', creator.displayName)} alt="" className="h-full w-full object-cover" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="truncate font-black text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>
+                              {creator.displayName || `Creator #${creator.userId}`}
+                            </h3>
+                            <p className="text-xs font-bold uppercase tracking-wider text-[#6B7280]">Creator</p>
+                          </div>
+                        </div>
+                        <div className="mt-5 grid grid-cols-2 gap-3">
+                          <div className="rounded-xl bg-[#EFF4FF] p-3">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#6B7280]">Reach</p>
+                            <p className="mt-1 text-lg font-black text-[#0B1C30]">{(audienceSize / 1000).toFixed(1)}K</p>
+                          </div>
+                          <div className="rounded-xl bg-[#F0FDF4] p-3">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#6B7280]">Score</p>
+                            <p className="mt-1 text-lg font-black text-[#006D32]">{influenceScore || '--'}</p>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <div className="mb-2 flex justify-between text-xs font-bold">
+                            <span className="text-[#6B7280]">Influence strength</span>
+                            <span className="text-[#006D32]">{influenceScore || 0}/100</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-[#E5E7EB]">
+                            <div className="h-full rounded-full bg-[#006D32]" style={{ width: `${Math.min(100, influenceScore)}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
