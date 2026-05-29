@@ -29,6 +29,9 @@ const growthData = [
   { name: 'WK 04', avgFollowers: 1800000 },
 ];
 
+const DISCOVERY_PAGE_SIZE = 6;
+const MORE_CREATORS_LIMIT = 6;
+
 
 
 // ─── Discovery Screen (main) ──────────────────────────────────────────────────
@@ -38,14 +41,23 @@ function DiscoveryScreen() {
   useEffect(() => { setMounted(true); }, []);
 
   const [search, setSearch] = useState('');
-  const { data: discoveryData, isLoading: isDiscoverLoading } = useDiscoverCreators(20, 0, undefined, !search);
+  const [page, setPage] = useState(0);
+  const [showMoreCreators, setShowMoreCreators] = useState(false);
+  const { data: discoveryData, isLoading: isDiscoverLoading } = useDiscoverCreators(DISCOVERY_PAGE_SIZE, page * DISCOVERY_PAGE_SIZE, undefined, !search);
   const { data: searchData, isLoading: isSearchLoading } = useSearchCreators(search, 20, !!search);
+  const { data: moreCreatorsData, isLoading: isLoadingMoreCreators } = useDiscoverCreators(
+    MORE_CREATORS_LIMIT,
+    (page + 1) * DISCOVERY_PAGE_SIZE,
+    undefined,
+    !search && showMoreCreators,
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | ''>('');
 
   const creators = search ? (searchData?.creators || []) : (discoveryData?.creators || []);
+  const moreCreators = !search && showMoreCreators ? (moreCreatorsData?.creators || []) : [];
   const isLoading = search ? isSearchLoading : isDiscoverLoading;
-  const selected = creators.find(c => c.userId === selectedId) || null;
+  const selected = [...creators, ...moreCreators].find(c => c.userId === selectedId) || null;
   const { data: fullProfile } = useCreatorProfile(selectedId || '', !!selectedId);
 
   const { data: stats } = useSmeStats();
@@ -54,6 +66,11 @@ function DiscoveryScreen() {
   const scoutMutation = useScoutCreator();
   const unscoutMutation = useUnscoutCreator();
   const addCreatorToCampaignMutation = useAddCreatorToCampaign();
+
+  useEffect(() => {
+    setPage(0);
+    setShowMoreCreators(false);
+  }, [search]);
 
   if (!mounted) return null;
 
@@ -103,6 +120,56 @@ function DiscoveryScreen() {
     { label: 'Creators Discovery', value: stats?.totalCreators?.toLocaleString() || '0', trend: 'INDEXED', up: true, bg: '#EFF4FF' },
     { label: 'Discovery Coverage', value: `${stats?.discoveryCoverage || 0}%`, trend: 'SYNCED', up: true, bg: '#D3E4FE' },
   ];
+
+  const hasNextPage = !search && creators.length === DISCOVERY_PAGE_SIZE;
+  const hasPrevPage = !search && page > 0;
+
+  const renderCreatorCard = (c: any) => (
+    <motion.div
+      key={c.userId} whileHover={{ y: -3 }} onClick={() => setSelectedId(c.userId)}
+      className={`bg-white rounded-2xl border-2 p-5 cursor-pointer transition-shadow ${
+        selectedId === c.userId ? 'border-[#006D32] shadow-md' : 'border-[#E5E7EB] hover:border-[#006D32]/40'
+      }`}
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#EFF4FF]">
+           <img src={getAvatarSrc(c.userId, 'creator', c.displayName)} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-bold text-[#0B1C30] truncate">{c.displayName}</p>
+          <div className="flex gap-2 mt-0.5">
+            <span className="text-[10px] font-semibold text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded uppercase">{c.category || 'Creator'}</span>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3 pt-3 border-t border-[#F3F4F6]">
+        <div>
+          <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wide">Reach</p>
+          <p className="font-bold text-[#0B1C30] mt-0.5">{(c.audienceSize / 1000).toFixed(0)}K</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wide">Platform</p>
+          <p className="font-bold text-[#0B1C30] mt-0.5">YT</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wide">Score</p>
+          <p className="font-bold text-[#0B1C30] mt-0.5">{c.influenceScore || '--'}</p>
+        </div>
+      </div>
+      <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
+        <div className="flex justify-between text-xs mb-1">
+          <span className="text-[#6B7280] font-semibold">Influence Score</span>
+          <span className="font-bold text-[#006D32]">{c.influenceScore || 0}/100</span>
+        </div>
+        <div className="h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }} animate={{ width: `${c.influenceScore || 0}%` }} transition={{ duration: 1 }}
+            className="h-full bg-[#006D32] rounded-full"
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
@@ -164,65 +231,121 @@ function DiscoveryScreen() {
               className="w-full pl-10 pr-4 py-2.5 bg-[#EFF4FF] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#006D32]/20"
             />
           </div>
+
+          {selected && (
+            <div className="lg:hidden bg-white rounded-2xl p-5 space-y-4 shadow-sm border border-[#E2E8F0]">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-[#EFF4FF]">
+                  <img src={getAvatarSrc(selected.userId, 'creator', selected.displayName)} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-bold text-[#0B1C30] truncate" style={{ fontFamily: "'Space Grotesk'" }}>{selected.displayName}</h2>
+                  <p className="text-xs text-[#6B7280] font-medium">{selected.category || 'Creative Creator'}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl bg-[#EFF4FF] p-3">
+                  <p className="text-[10px] text-[#6B7280] font-bold uppercase">Reach</p>
+                  <p className="font-bold text-[#0B1C30]">{(selected.audienceSize / 1000).toFixed(1)}K</p>
+                </div>
+                <div className="rounded-xl bg-[#F0FDF4] p-3">
+                  <p className="text-[10px] text-[#6B7280] font-bold uppercase">Score</p>
+                  <p className="font-bold text-[#006D32]">{selected.influenceScore || '--'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => toggleShortlist(selected.userId)}
+                className={`w-full py-3 font-bold rounded-xl transition text-sm flex items-center justify-center gap-2 ${
+                  isShortlisted(selected.userId) 
+                    ? 'bg-[#F0FDF4] text-[#006D32] border border-[#006D32]/20' 
+                    : 'bg-[#006D32] text-white hover:bg-[#005227]'
+                }`}
+              >
+                {isShortlisted(selected.userId) ? (
+                  <><CheckCircle size={18} weight="fill" /> Shortlisted</>
+                ) : (
+                  <><Plus size={18} weight="bold" /> Add to Shortlist</>
+                )}
+              </button>
+            </div>
+          )}
           
           {isLoading ? (
             <div className="py-20 text-center text-[#6B7280]">Searching for creators...</div>
           ) : creators.length === 0 ? (
             <div className="py-20 text-center text-[#6B7280]">No creators found matching your criteria.</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {creators.map(c => (
-                <motion.div
-                  key={c.userId} whileHover={{ y: -3 }} onClick={() => setSelectedId(c.userId)}
-                  className={`bg-white rounded-2xl border-2 p-5 cursor-pointer transition-shadow ${
-                    selectedId === c.userId ? 'border-[#006D32] shadow-md' : 'border-[#E5E7EB] hover:border-[#006D32]/40'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#EFF4FF]">
-                       <img src={getAvatarSrc(c.userId, 'creator', c.displayName)} alt="" className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#0B1C30]">{c.displayName}</p>
-                      <div className="flex gap-2 mt-0.5">
-                        <span className="text-[10px] font-semibold text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded uppercase">{c.category || 'Creator'}</span>
-                      </div>
-                    </div>
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {creators.map(renderCreatorCard)}
+              </div>
+
+              {!search && (
+                <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm border border-[#E2E8F0] sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs font-bold text-[#6B7280]">
+                    Page {page + 1} · showing {creators.length} creators
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setPage((current) => Math.max(0, current - 1));
+                        setShowMoreCreators(false);
+                      }}
+                      disabled={!hasPrevPage}
+                      className="flex-1 sm:flex-none rounded-xl border border-[#E2E8F0] px-4 py-2 text-xs font-bold text-[#0B1C30] disabled:opacity-40"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPage((current) => current + 1);
+                        setShowMoreCreators(false);
+                      }}
+                      disabled={!hasNextPage}
+                      className="flex-1 sm:flex-none rounded-xl bg-[#006D32] px-4 py-2 text-xs font-bold text-white disabled:opacity-40"
+                    >
+                      Next page
+                    </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 pt-3 border-t border-[#F3F4F6]">
+                </div>
+              )}
+
+              {!search && (
+                <div className="rounded-2xl bg-[#EFF4FF] p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wide">Reach</p>
-                      <p className="font-bold text-[#0B1C30] mt-0.5">{(c.audienceSize / 1000).toFixed(0)}K</p>
+                      <h3 className="font-bold text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>More creators</h3>
+                      <p className="text-xs text-[#6B7280] mt-1">Expand the next batch without leaving the current page.</p>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wide">Platform</p>
-                      <p className="font-bold text-[#0B1C30] mt-0.5">YT</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wide">Score</p>
-                      <p className="font-bold text-[#0B1C30] mt-0.5">{c.influenceScore || '--'}</p>
-                    </div>
+                    <button
+                      onClick={() => setShowMoreCreators((value) => !value)}
+                      className="rounded-xl bg-white px-4 py-2 text-xs font-bold text-[#006D32] border border-[#D3E4FE]"
+                    >
+                      {showMoreCreators ? 'Hide more' : 'View more'}
+                    </button>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-[#6B7280] font-semibold">Influence Score</span>
-                      <span className="font-bold text-[#006D32]">{c.influenceScore || 0}/100</span>
+
+                  {showMoreCreators && (
+                    <div className="mt-5">
+                      {isLoadingMoreCreators ? (
+                        <div className="py-8 text-center text-sm text-[#6B7280]">Loading more creators...</div>
+                      ) : moreCreators.length ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {moreCreators.map(renderCreatorCard)}
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center text-sm text-[#6B7280]">No more creators available right now.</div>
+                      )}
                     </div>
-                    <div className="h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }} animate={{ width: `${c.influenceScore || 0}%` }} transition={{ duration: 1 }}
-                        className="h-full bg-[#006D32] rounded-full"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Detail Panel */}
-        <div>
+        <div className="hidden lg:block">
           {selected ? (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
               className="bg-white rounded-2xl p-6 sticky top-6 space-y-6 shadow-sm border border-[#E2E8F0]"

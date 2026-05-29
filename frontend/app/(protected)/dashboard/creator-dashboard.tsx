@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Lightning, Users, ShoppingCart, ArrowsClockwise, PlayCircle, InstagramLogo, TiktokLogo, CaretRight } from '@phosphor-icons/react';
-import { useAudienceInsights, usePerformanceInsights, useMeProfile, useYoutubeMetrics } from '@/lib/api/hooks';
+import { Eye, Lightning, Users, ShoppingCart, ArrowsClockwise, PlayCircle, InstagramLogo, TiktokLogo, CaretRight, YoutubeLogo, LinkSimple } from '@phosphor-icons/react';
+import { useAudienceInsights, usePerformanceInsights, useMeProfile, useYoutubeMetrics, usePrepareYoutubeOauth } from '@/lib/api/hooks';
 import { getYoutubeErrorToastMessage } from '@/lib/api/errors';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
@@ -42,6 +42,8 @@ export default function CreatorDashboard() {
   const { data: audience, isLoading: loadingAudience, refetch: refetchAudience } = useAudienceInsights(30);
   const { data: perf, isLoading: loadingPerf, refetch: refetchPerf } = usePerformanceInsights(30);
   const { refetch: syncYoutube, isFetching: isSyncing } = useYoutubeMetrics(false);
+  const [isConnectingYoutube, setIsConnectingYoutube] = useState(false);
+  const { data: youtubeOauth, isFetching: loadingYoutubeOauth } = usePrepareYoutubeOauth(isConnectingYoutube);
 
   const isLoading = loadingAudience || loadingPerf || isSyncing;
 
@@ -56,6 +58,12 @@ export default function CreatorDashboard() {
       toast.error(getYoutubeErrorToastMessage(error));
     }
   };
+
+  useEffect(() => {
+    if (youtubeOauth?.authorizationUrl && isConnectingYoutube) {
+      window.location.href = youtubeOauth.authorizationUrl;
+    }
+  }, [youtubeOauth, isConnectingYoutube]);
 
   if (!mounted) return <div className="h-screen bg-[#F8F9FF]" />;
 
@@ -113,6 +121,38 @@ export default function CreatorDashboard() {
           {isSyncing ? 'Syncing...' : 'Sync Data'}
         </button>
       </div>
+
+      {profile && !isConnected && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-[20px] border border-[#D3E4FE] bg-white p-6 shadow-sm lg:p-8"
+        >
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF7F7]">
+                <YoutubeLogo size={28} weight="fill" className="text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-[#0B1C30]" style={{ fontFamily: "'Space Grotesk'" }}>
+                  Nothing yet? Try connecting a few social accounts.
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#3C4A3D]">
+                  YouTube is available now. Connect it to unlock creator metrics, content performance, and influence scoring.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsConnectingYoutube(true)}
+              disabled={loadingYoutubeOauth}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#006D32] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#005227] disabled:opacity-60"
+            >
+              <LinkSimple size={18} weight="bold" />
+              {loadingYoutubeOauth ? 'Preparing...' : 'Connect YouTube'}
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">

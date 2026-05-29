@@ -20,6 +20,7 @@ export default function Callback() {
         const verifyResp = await api.get('/auth/verify', { withCredentials: true }).catch(() => null);
 
         let user = null;
+        let isOnboarded = true;
 
         if (verifyResp?.data) {
           // verify returns shape: { valid: true, userId, tenantId, email, role, sessionId }
@@ -29,6 +30,7 @@ export default function Callback() {
             // verify succeeded but we need full profile
             const meResp = await api.get('/users/me', { withCredentials: true });
             const d = meResp.data;
+            isOnboarded = Boolean(d.profile?.isOnboarded);
             user = {
               id: d.profile?.id,
               name: d.profile?.name,
@@ -41,6 +43,7 @@ export default function Callback() {
           // If verify wasn't available, try users/me directly
           const meResp = await api.get('/users/me', { withCredentials: true });
           const d = meResp.data;
+          isOnboarded = Boolean(d.profile?.isOnboarded);
           user = {
             id: d.profile?.id,
             name: d.profile?.name,
@@ -52,7 +55,7 @@ export default function Callback() {
 
         if (user) {
           setAuth(user);
-          router.replace(getPostLoginRoute(user.role));
+          router.replace(isOnboarded ? getPostLoginRoute(user.role) : '/onboarding');
           return;
         }
 

@@ -77,7 +77,7 @@ export default function LandingPage() {
               </motion.button>
              <motion.button
                 whileHover={{ scale: 1.02 }}
-                onClick={() => router.push('/onboarding')}
+                onClick={() => router.push('/signup')}
                 className="px-6 py-3 border-2 border-[#E5E7EB] text-[#0B1C30] font-bold rounded-lg hover:border-[#006D32] transition"
                 style={{ fontFamily: "\"Space Grotesk\"" }}
               >
