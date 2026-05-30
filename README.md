@@ -1,4 +1,4 @@
-# # CIAP Platform (Team B)
+# CIAP Platform (Team B)
 
 CIAP is a creator influence and analytics platform built as a multi-service system combining a **NestJS API**, a **Next.js frontend**, and a **Python-based analytics engine**. Each service is independently structured but designed to work as a unified system.
 
@@ -8,6 +8,7 @@ CIAP is a creator influence and analytics platform built as a multi-service syst
 
 - **Backend API** – NestJS + TypeScript service  
   Handles authentication, core business logic, PostgreSQL database access via Drizzle ORM, and API documentation.  
+  Swagger documentation available at: **/api-docs**  
   → [backend/README.md](backend/README.md)
 
 - **Frontend App** – Next.js + React  
@@ -34,7 +35,8 @@ CIAP is a creator influence and analytics platform built as a multi-service syst
   https://30-cycle-hackathon-team-b.vercel.app
 
 - **Backend API**  
-  https://p01--ciap-apis--fh4qwyd5rbmr.code.run
+  https://p01--ciap-apis--fh4qwyd5rbmr.code.run  
+  Swagger docs: https://p01--ciap-apis--fh4qwyd5rbmr.code.run/api-docs
 
 - **Queue Monitoring (Bull Board / Redis UI)**  
   https://p01--redis-bullboard--fh4qwyd5rbmr.code.run  
