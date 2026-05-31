@@ -51,4 +51,9 @@ CIAP is a creator influence and analytics platform built as a multi-service syst
 
 - Service-specific implementation details should remain in their respective module READMEs to avoid duplication.
 - Cross-service architecture decisions or shared contracts can be documented here if they grow in importance.
-- Keep environment URLs and credentials updated and rotate them when necessary.
+- Keep environment URLs and credentials updated and rotate them > **Note**
+>
+> YouTube integrations will only work for Google accounts that have been added to the project's authorized testing team. External accounts that are not part of the team will not be able to complete the YouTube authorization flow.
+>
+> To enable YouTube connectivity for additional accounts, a valid Google OAuth **Client ID** and **Client Secret** must be configured. Refer to the **backend/README.md** for setup instructions and environment configuration details.
+
